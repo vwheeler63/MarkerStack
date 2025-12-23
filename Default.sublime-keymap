@@ -1,0 +1,10 @@
+[
+	{
+		"keys": ["f5"],
+		"command": "marker_stack_push",
+	},
+	{
+		"keys": ["shift+f5"],
+		"command": "marker_stack_pop"
+	},
+]

@@ -1,0 +1,26 @@
+[
+	// Items listed here become available in the Command Palette.
+	{
+		"caption": "MarkerStack: Open Readme",
+		"command": "open_file",
+		"args": {
+			"file": "${packages}/MarkerStack/README.rst"
+		}
+	},
+	{
+		"caption": "MarkerStack: Edit MarkerStack Key Bindings",
+		"command": "edit_settings",
+		"args": {
+			"base_file": "${packages}/MarkerStack/Default.sublime-keymap",
+			"default": "[\n\t$0\n]\n"
+		}
+	},
+	{
+		"caption": "MarkerStack: Push Marker",
+		"command": "marker_stack_push"
+	},
+	{
+		"caption": "MarkerStack: Pop Marker",
+		"command": "marker_stack_pop"
+	},
+]

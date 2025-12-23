@@ -1,0 +1,47 @@
+// Place your settings in the file "Packages/User/MarkerStack.sublime-settings",
+// which overrides its default settings here.
+//
+// Note:  You may need to re-start Sublime Text in order to get changed
+//        configuration values to load.
+{
+	// String.  Path to Gutter Icon
+	// ------------------------------
+	// This can be any 15x15 .PNG icon.  Its background should be transparent.
+	// Sublime Text uses a gray-scale map, so the color White will be the full
+	// color below, light gray will be a darker shade of that color, and dark
+	// gray will be a dark shade of that color.
+	// This can also be one of the following strings to use icons that are
+	// built into Sublime Text:
+	// - "dot"
+	// - "circle"
+	// - "bookmark"
+	"ms_icon_path": "Packages/MarkerStack/marker_gutter_icon.png",
+
+	// String.  Icon Color
+	// -------------------
+	// This must be one of the color strings accepted in the `scope` argument
+	// of the `View.add_regions()` function documented here:
+	// https://www.sublimetext.com/docs/api_reference.html#sublime.View.add_regions
+	// As of build 3148, this list is:
+	// - "region.redish"
+	// - "region.orangish"
+	// - "region.yellowish"
+	// - "region.greenish"
+	// - "region.cyanish"
+	// - "region.bluish"
+	// - "region.purplish"
+	// - "region.pinkish"
+	"ms_icon_color": "region.purplish",
+
+	// Animate Scrolling?
+	// ------------------
+	// When you POP a Marker, part of what is restored, in addition to the cursor
+	// position, is the scroll-state of the View (Viewport position) when the
+	// Marker was created.  If that Viewport position was different than than it
+	// is now, Sublime Text is going to need to scroll the View in order to return
+	// it to the prior Viewport position.  This configuration item determines
+	// whether that scrolling is animated or not:  animated scrolling shows your
+	// text "swish by" visually (which takes about 1/20th of a second), whereas
+	// no animation makes the scrolling happen instantly.
+	"ms_animate_scrolling": false,
+}
