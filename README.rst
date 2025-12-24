@@ -115,6 +115,9 @@ you can do something like this in your ``User/Default.sublime-keymap`` file:
         },
     ]
 
+Of course, you can also select your own key bindings based on what feels most natural
+to you.
+
 
 
 MarkerStack Gutter Symbol
