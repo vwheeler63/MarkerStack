@@ -15,9 +15,9 @@ Usage
 
 The following applies to every View on every platform:
 
-- F5 (or your custom Key Binding) to PUSH a Marker (cursor- and viewport positions).
+- (your custom Key Binding) to PUSH a Marker (cursor- and viewport positions).
 
-- Shift+F5 (or your custom Key Binding) to POP a Marker (and return to cursor- and
+- (your custom Key Binding) to POP a Marker (and return to cursor- and
   viewport positions).
 
 
@@ -80,6 +80,40 @@ The Marker Stack is "remembered" until the document is closed, including across
 Sublime Text sessions.
 
 For additional details, see module header comment in ``markerstack.py``.
+
+
+
+Key Binding
+***********
+
+MarkerStack comes with only a "suggested" key binding in its ``Default.sublime-keymap``
+file.  (Its contents are commented out.)
+
+Since MarkerStack was created to supply a much-used service that my previous editor
+provided, I wanted to use the same keys I used in THAT editor.  In that editor, Push
+and Pop operations were mapped to the [F4] and [Shift+F4] keys respectively.  Because
+Sublime Text already has these 2 keystrokes mapped by default, if you want, you can
+either uncomment the keymap provided (to use [F5] and [Shift+F5] respectively), or
+you can do something like this in your ``User/Default.sublime-keymap`` file:
+
+.. code-block:: json
+
+    [
+        // --------------------------------------------------------------------
+        // Marker Stack Customization -- Swap F4 and F5.
+        // --------------------------------------------------------------------
+        // First, move `next_result` and `prev_result` to other keys.
+        { "keys": ["f5"], "command": "next_result" },
+        { "keys": ["shift+f5"], "command": "prev_result" },
+        {
+          "keys": ["f4"],
+          "command": "marker_stack_push",
+        },
+        {
+          "keys": ["shift+f4"],
+          "command": "marker_stack_pop"
+        },
+    ]
 
 
 
