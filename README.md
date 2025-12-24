@@ -1,4 +1,4 @@
-# Marker Stack
+# Sublime Text MarkerStack Package
 
 Push a "marker" (position in the text) onto a "Marker Stack" (with a single keystroke)
 with the ability to come back to that point later by popping it off the marker stack
@@ -19,7 +19,7 @@ The following applies to every View on every platform:
 
 
 
-## The Problem Marker Stack Solves
+## The Problem MarkerStack Solves
 
 Using Sublime Text Bookmarks is a handy way to navigate repeatedly to different
 places in a file you are working on, but it leaves a gap of functionality that
@@ -50,19 +50,19 @@ one keystroke?
 And maybe in the middle of THAT edit, you realize something ELSE you need to change
 elsewhere in the document, and you want to do THAT before you forget it.
 
-The solution?  Marker Stack.
+The solution?  MarkerStack.
 
-Marker Stack gives you the ability to save "where you are" to go somewhere else in
+MarkerStack gives you the ability to save "where you are" to go somewhere else in
 the document temporarily and then come back to where you were again.  And there is
 no limit as to how deeply nested your "tasks" get.  One keystroke, and you're back
 to your previous Marker, without having to think about (or remember) what it was you
 were doing when you broke away to do something else.
 
-(The below description uses Marker Stack's default Key Bindings.  You can, of course,
+(The below description uses MarkerStack's default Key Bindings.  You can, of course,
 change these to your liking.)
 
 [F5] to push current caret position and viewport position onto a Marker Stack, which
-additionally places a Marker-Stack icon in one of the gutters on the left.
+additionally places a MarkerStack icon in one of the gutters on the left.
 
 You can then move your cursor elsewhere and later use [Shift+F5] to to back to the
 location and scroll state of an unlimited-size Marker Stack.  Once the Marker
@@ -72,14 +72,14 @@ is "popped", the matching icon in the gutter goes away.  Of course, if you
 Each View has its own Marker Stack, as it applies to a "stack-like task" within only
 that one document.  This is by design.
 
-The Marker-Stack is "remembered" until the document is closed, including across
+The Marker Stack is "remembered" until the document is closed, including across
 Sublime Text sessions.
 
 For additional details, see module header comment in `markerstack.py`.
 
 
 
-## Marker-Stack Gutter Symbol
+## MarkerStack Gutter Symbol
 
 The `marker_gutter_icon.png` symbol was chosen over a "bookmark" symbol so as to be
 explicitly clear in the gutter that the saved position IS NOT a bookmark, which has
