@@ -1,0 +1,55 @@
+MarkerStack is the missing tool for managing editing-task interruptions in
+Sublime Text 3 and onward.
+
+With it you can PUSH/POP cursor (caret) position in View with single
+keystroke.  Marker Stacks are kept PER VIEW, and their states are saved
+across Sublime Text sessions.  Each View only stores MarkerStack information
+until the stack becomes empty, and then that storage is removed again, i.e.
+Views with no PUSHED cursor (caret) positions are not burdened with any
+kind of storage, including across Sublime Text sessions.
+
+Example Use
+-----------
+
+You realize you need to quickly change something ELSE in the file you are
+editing before you forget it, so you PUSH your current cursor (caret) position
+onto the Marker Stack, go do your edit elsewhere in the file, and then POP
+your cursor position OFF the Marker Stack again, returning to exactly where
+you left off:  cursor position, as well as viewport position.  Such
+interruptions can be nested to any depth.
+
+Using MarkerStack is significantly more efficient than setting a Bookmark for
+interruptions such as the above, and doesn't leave you with the task of
+cleaning up now-unused bookmarks.  It is designed for efficiently managing
+temporary moves away from your current editing task.
+
+Quick Start
+-----------
+
+Review the README and decide what keys you want to map the PUSH/POP functions
+to.  A suggested `Default.sublime-keymap` key binding (commented out) is
+included.  You can either uncomment what is there, and save it as
+`Packages/User/Default.sublime-keymap` (or add its contents to your existing
+`Packages/User/Default.sublime-keymap` if you already have one) or map commands
+to the keys that feel most natural to you.
+
+Menu
+----
+
+MarkerStack installs its own maintenance menu items:
+
+Preferences > Package Settings > MarkerStack:
+
+    README           (MarkerStack orientation)
+    Settings         (documentation included)
+    Key Bindings     (split view)
+
+Having Problems?
+----------------
+
+If you encounter any problems with MarkerStack, or think that it can
+be improved to make your work easier, please log an issue with the
+MarkerStack issue tracker:
+
+    https://github.com/vwheeler63/MarkerStack/issues
+
