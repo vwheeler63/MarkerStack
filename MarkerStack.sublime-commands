@@ -8,11 +8,19 @@
 		}
 	},
 	{
-		"caption": "MarkerStack: Edit MarkerStack Key Bindings",
+		"caption": "MarkerStack: Key Bindings",
 		"command": "edit_settings",
 		"args": {
 			"base_file": "${packages}/MarkerStack/Default.sublime-keymap",
 			"default": "[\n\t$0\n]\n"
+		}
+	},
+	{
+		"caption": "MarkerStack: Settings",
+		"command": "edit_settings",
+		"args": {
+			"base_file": "${packages}/MarkerStack/MarkerStack.sublime-settings",
+			"default": "{\n\t$0\n}\n"
 		}
 	},
 	{
