@@ -3,7 +3,7 @@ Sublime Text MarkerStack Package
 ********************************
 
 Push a "marker" (position in the text) onto a "Marker Stack" (with a single keystroke)
-with the ability to come back to that point later by popping it off the marker stack
+with the ability to come back to that point later by popping it off the Marker Stack
 (with a single keystroke).  A symbol appears in the left gutter showing what line it
 is on.  The marker moves with the text when text is inserted or deleted before it.
 Unlimited stack size; saves state between sessions.

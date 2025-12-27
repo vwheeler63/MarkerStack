@@ -1,7 +1,7 @@
 MarkerStack is the missing tool for managing editing-task interruptions in
 Sublime Text 3 and onward.
 
-With it you can PUSH/POP cursor (caret) position in View with single
+With it you can PUSH/POP cursor (caret) position in View with a single
 keystroke.  Marker Stacks are kept PER VIEW, and their states are saved
 across Sublime Text sessions.  Each View only stores MarkerStack information
 until the stack becomes empty, and then that storage is removed again, i.e.
