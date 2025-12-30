@@ -1,18 +1,37 @@
-MarkerStack is the missing tool for managing editing-task interruptions in
-Sublime Text 3 and onward.
+MarkerStack is the missing tool for efficiently managing temporary moves away
+from your current editing position in Sublime Text 3 and onward.
 
-With it you can PUSH your cursor (caret) position in a Sublime Text View with
-one keystroke, go and handle something elsewhere in the same file, and then
-POP your cursor position with another keystroke, to be right back where you
-left off.
+The Problem MarkerStack Handles
+-------------------------------
 
-Marker Stack data is kept PER VIEW, and their states are saved across Sublime
-Text sessions.
+There are many kinds of editing interruptions that happen regularly for most
+people using a text editor.  Examples:
+
+- go elsewhere in a file to copy a line of text (e.g. source code) onto the
+  clipboard, so that it can be pasted into the text where you are editing;
+- handle something elsewhere in the file before you forget it;
+- you literally get interrupted and need to move your cursor away from where
+  you are editing in order to handle the need brought by the interruption.
+
+With MarkerStack, you can PUSH your cursor (caret) position in a Sublime Text
+View with one keystroke, go do something elsewhere in the same file, and then
+POP your cursor position with another keystroke, to instantly be back where
+you left off, without having to remember where it is.
+
+Marker Stack data is saved across Sublime Text sessions, for those occasions when
+handling an interruption might span across Sublime Text sessions.
 
 Using MarkerStack is significantly more efficient than setting a Bookmark for
 interruptions such as the above, and doesn't leave you with the task of
-cleaning up unused bookmarks.  It is designed for efficiently managing
-temporary moves away from your current editing task.
+
+- cleaning up unused bookmarks, or
+- remembering where you were previously in the file.
+
+MarkerStack is especially helpful if the duration of an interruption lasted
+overnight, over a weekend, or even over a vacation!
+
+It is designed for efficiently managing temporary moves away from your current
+editing position in the text.
 
 Quick Start
 -----------

@@ -2,43 +2,65 @@
 Sublime Text MarkerStack Package
 ********************************
 
-Push a "marker" (position in text) onto a "Marker Stack" (with one keystroke) with the
-ability to come back to that point later by popping it off the Marker Stack (with
-another keystroke).  A symbol appears in the left gutter showing what line it is on.
-The marker moves with the text when text is inserted or deleted before it.  Stack size
-is virtually unlimited; saves state between sessions.
+Push a "marker" (position in text) onto a "Marker Stack", with the ability to come
+back to that point later by popping it off the Marker Stack.  A symbol appears in the
+left gutter showing what line it is on.  The marker moves with the text when text is
+inserted or deleted before it.  Stack size is virtually unlimited.  The Marker Stack
+is "remembered" until the document is closed, including across Sublime Text
+sessions.
 
 
 Introduction
 ************
 
-MarkerStack gives you the ability to save "where you are" with one keystroke to go
-somewhere else in the document temporarily, and then with another keystroke, come
-back to where you were again, without having to think about (or remember) what it was
-you were doing before, or where it was, when you broke away to do something else.
-A"marker" appears in the left gutter to show the position you saved, which is removed
-again once that position is removed from the stack.  There is no practical limit as
-to how deeply nested your "tasks" get.
+MarkerStack is the missing tool for efficiently managing temporary moves away from
+your current editing position in Sublime Text 3 and onward.
 
-Each View has its own Marker Stack, as it applies to a "stack-like task" within only
-that one document.  This is by design.
+The Problem MarkerStack Handles
+===============================
 
-The Marker Stack is "remembered" until the document is closed, including across
-Sublime Text sessions.
+There are many kinds of editing interruptions that happen regularly for most people
+using a text editor.  Examples:
 
-For additional details, see module header comment in ``markerstack.py``.
+- go elsewhere in a file to copy a line of text (e.g. source code) onto the clipboard,
+  so that it can be pasted into the text where you are editing;
+- handle something elsewhere in the file before you forget it;
+- you literally get interrupted and need to move your cursor away from where you are
+  editing in order to handle the need brought by the interruption.
+
+With MarkerStack, you can PUSH your cursor (caret) position in a Sublime Text View
+with one keystroke, go do something elsewhere in the same file, and then POP your
+cursor position with another keystroke, to instantly be back where you left off,
+without having to remember where it is.
+
+Marker Stack data is saved across Sublime Text sessions, for those occasions when
+handling an interruption might span across Sublime Text sessions.
+
+It is designed for efficiently managing temporary moves away from your current
+editing position in the text.
+
+For additional details, see the module header comment in ``markerstack.py``.
 
 Why MarkerStack is Better than Bookmarks for Interruptions
 ==========================================================
 
 Using Sublime Text Bookmarks is a handy way to navigate repeatedly to different
 places in a file you are working on, but it leaves a gap of functionality that
-writers, editors and coders sometimes need.  To illustrate, let's say you are typing
-in one paragraph (or block of code) and your train of thought (or a phone call) makes
-you realize that there is something else in the file that needs to be updated, and
-you want to do that quickly before you forget, and then come back to continue what you
-were doing before.  You can sort of "manage" that with Bookmarks, but Bookmarks were
-not designed to handle that scenario efficiently.  MarkerStack is.
+writers, editors and coders sometimes need for *temporary* moves away from the
+part of the file being viewed or edited.
+
+Using MarkerStack is significantly more efficient than setting a Bookmark for
+interruptions such as the above, and doesn't leave you with the task of
+
+- cleaning up unused bookmarks, or
+- remembering where you were previously in the file.
+
+To illustrate, let's say you are typing in one paragraph (or block of code) and your
+train of thought (or a phone call) makes you realize that there is something else in
+the file that needs to be updated, and you want to do that quickly before you forget,
+and then come back to continue what you were doing before.  You can sort of "manage"
+that with Bookmarks, but Bookmarks were not designed to handle that scenario
+efficiently.  MarkerStack is.
 
 
 Getting Started
@@ -52,12 +74,12 @@ MarkerStack was originally intended to be pre-mapped to a pair of keystrokes
 but because the good instructions for publishing a Sublime Text Package strongly
 advise against any pre-defined key mappings, MarkerStack comes with a
 ``Default.sublime-keymap`` with a default key mapping that is commented out.  To use
-MarkerStack via the keyboard, you'll need to map a pair of keys to its PUSH and POP
-Commands.
+MarkerStack via the keyboard (easier than using it through the Command Palette),
+you'll need to map a pair of keys to its PUSH and POP Commands.
 
 The easiest way to set your key bindings is through the menu:
 
-    Preferences > Package Settings > Marker Stack > Key Bindings
+    Preferences > Package Settings > MarkerStack > Key Bindings
 
 You can copy/paste the commented out default key mappings into your
 ``User/Default.sublime-keymap``:
@@ -101,8 +123,7 @@ something like this instead:
         },
     ]
 
-Of course, you can also select your own key bindings based on what feels most natural
-to you.
+Of course, you can select your own key bindings based on what feels most natural to you.
 
 
 Usage
@@ -120,7 +141,7 @@ Menu Items
 
 The following menu items are installed with MarkerStack:
 
-Preferences > Package Settings > Marker Stack >
+Preferences > Package Settings > MarkerStack >
 
 - README:        opens this file
 - Settings:      opens a split-view of MarkerStack settings
@@ -132,7 +153,7 @@ Commands
 
 - MarkerStack: Push Marker    Push current caret + viewport position onto stack
 - MarkerStack: Pop Marker     Pop caret + viewport position off stack
-- MarkerStack: Open Readme    Open README
+- MarkerStack: Open Readme    Open README (this file)
 - MarkerStack: Settings       Split-view of MarkerStack settings
 - MarkerStack: Key Bindings   Split-view of MarkerStack key bindings
 
@@ -141,9 +162,9 @@ Storage
 *******
 
 Each View only stores MarkerStack information until the stack becomes empty, and then
-that storage is removed again.  In other words, Views with no PUSHED cursor
-(caret) positions are not burdened with any kind of storage, including across Sublime
-Text sessions.
+that storage is removed again.  In other words, Views with no PUSHed cursor (caret)
+positions are not burdened with any kind of storage, including across Sublime Text
+sessions.
 
 
 MarkerStack Gutter Symbol
