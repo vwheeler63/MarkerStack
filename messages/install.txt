@@ -8,10 +8,10 @@ There are many kinds of editing interruptions that happen regularly for most
 people using a text editor.  Examples:
 
 - go elsewhere in a file to copy a line of text (e.g. source code) onto the
-  clipboard, so that it can be pasted into the text where you are editing;
+  clipboard, so that it can be pasted where you are editing;
 - handle something elsewhere in the file before you forget it;
-- you literally get interrupted and need to move your cursor away from where
-  you are editing in order to handle the need brought by the interruption.
+- you get interrupted and need to move your cursor away from where you are
+  editing in order to handle the need brought by the interruption.
 
 With MarkerStack, you can PUSH your cursor (caret) position in a Sublime Text
 View with one keystroke, go do something elsewhere in the same file, and then
