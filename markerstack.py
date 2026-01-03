@@ -23,15 +23,26 @@ Usage
 
 The following applies to every View on every platform:
 
-- F5 (or your custom Key Binding) to PUSH a Marker (cursor- and viewport positions).
+- [F5] (or your Key Binding) to PUSH a Marker (cursor- and viewport positions).
 
-- Shift+F5 (or your custom Key Binding) to POP a Marker (and return to cursor- and
+- [Shift+F5] (or your Key Binding) to POP a Marker (and return to cursor- and
   viewport positions).
 
 
 
 Design
 ******
+
+This was a tricky package to get working correctly because of the following
+barriers that had to be overcome.
+
+1.
+
+Initially it was thought that it was possible to simply create an object
+from any custom class and then store it with the View's settings.  Unfortunately,
+this is not possible, as a sublime.Settings-class object has limitations about
+what it can store, or perhaps the limitation is on what it can retrieve.
+In either case, it doesn't just return your object.
 
 
 PUSH
@@ -127,7 +138,7 @@ is doable....
 
 It is possible Viewport Position would be fine as a start, but there appears to be a
 group of View-object position queries with the names "viewport", "window", "layout"
-and "text" relating to position and DIP\ [1]_ coordinates may be applicable to this
+and "text" relating to position and DIP [1]_ coordinates may be applicable to this
 problem, and they are found right underneath these 2 functions in the
 ``python38/sublime.py`` file which leads me to believe that they are related.
 
