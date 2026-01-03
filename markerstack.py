@@ -23,9 +23,9 @@ Usage
 
 The following applies to every View on every platform:
 
-- [F5] (or your Key Binding) to PUSH a Marker (cursor- and viewport positions).
+- [F5] (or your Key Binding) to PUSH a Marker (caret- and viewport positions).
 
-- [Shift+F5] (or your Key Binding) to POP a Marker (and return to cursor- and
+- [Shift+F5] (or your Key Binding) to POP a Marker (and return to caret- and
   viewport positions).
 
 
@@ -33,20 +33,130 @@ The following applies to every View on every platform:
 Design
 ******
 
-This was a tricky package to get working correctly because of the following
-barriers that had to be overcome.
 
-1.
+Requirements
+============
 
-Initially it was thought that it was possible to simply create an object
-from any custom class and then store it with the View's settings.  Unfortunately,
-this is not possible, as a sublime.Settings-class object has limitations about
-what it can store, or perhaps the limitation is on what it can retrieve.
-In either case, it doesn't just return your object.
+1.  That it behaved like Multi-Edit Marker Stack, namely that Markers appeared
+    in the gutter, pushed onto an internal stack, and then as the Markers were
+    popped off the stack, the caret position and scroll state would return to
+    what they were when the Marker was pushed, with unlimited stack depth, and
+    no action (safe) when attempting to pop from an empty stack.
 
+2.  That its state across all open Views needed to persist across Sublime
+    Text sessions.
+
+3.  That when text was inserted and deleted ABOVE the Marker, that the
+    Marker needed to MOVE WITH the text, i.e. retain the same position
+    in the text, even though the text moved.
+
+4.  Views with no MarkerStack information must not be required to store
+    anything across Sublime Text sessions.
+
+
+Resources
+=========
+
+- A View's Settings object (a representation of which is returned with
+  ``self.view.settings()``) stores its content across sessions.  A whole
+  Python object (e.g. a dictionary containing your values) can be stored,
+  retrieved and removed from within a TextCommand using a unique key like
+  this:
+
+  .. code-block:: py
+
+      settings = self.view.settings()
+      settings.set(key, my_obj)        # Store
+      my_obj = settings.get(key)       # Retrieve
+      settings.erase(key)              # Remove
+
+  and whatever is stored is saved across Sublime Text sessions as long
+  as the View remains open.
+
+  It is also important to understand that ``my_obj`` retrieved by
+  ``my_obj = settings.get(key)`` above is NOT the same object that was
+  submitted, but is only a COPY, and thus modifying it does nothing to the
+  actual settings inside the View.  Further, ``settings.set(key, my_obj)``
+  ALSO does not store the object submitted, but instead makes a COPY of it
+  and stores THAT.  So there is no way to get an actual reference to the
+  objects stored inside a View's Settings object --- only copies.
+
+  Limitation:  simply storing caret position and viewport position
+  (scroll state) would not be adequate because when text is added or
+  deleted above the marker, the integer stored and retrieved for caret
+  position would become invalid, and there would be no way to understand
+  how to adjust it, and it would be horribly complex (impractical) to
+  keep it adjusted with every user keystroke.
+
+- A View also is able to store a set of regions referenced with a unique
+  key, stored, retrieved and removed via:
+
+  .. code-block:: py
+
+      View.add_regions(key, [rgn], color, icon_path, flags))  # Store
+      rgns = View.get_regions(key)                            # Retrieve
+      View.erase_regions(key)                                 # Remove
+
+  respectively.  And with the ``flags`` argument, one can cause:
+
+  - only the icon submitted to be visible (actual region would be hidden), and
+  - it can be made to persist across Sublime Text sessions as long as the
+    View remains open.
+
+  These regions DO move with the text when text is added and deleted above
+  them.  When retrieved with the key, the set of regions ONLY know about
+  the set of regions STORED, i.e. caret positions, and thus are NOT able to
+  store anything else, such as viewport position (scroll state).
+
+  Limitation:  whenever you retrieve a set of regions, Sublime Text
+  PRE-SORTS them to be in top-to-bottom order, even if that is not the
+  order in which they were submitted!
+
+  Because of this limitation, one call to ``View.add_regions()`` can
+  only apply to ONE Marker, not more.
+
+- The two (View Settings and View Regions) cleverly used in combination,
+  however, can make it work:
+
+      View Settings            View Regions
+      ----------------------   -----------------------
+      Stores a list (stack)    Stores a set of caret
+      of custom objects by     positions by unique key
+      key ('_marker_stack')    that move with the text
+
+  Thus:
+
+      Marker Stack Elements                                       View Regions
+      =======================================================     ==========================================================
+      Index   ViewportPos                RegionsKey               Key                    Regions                  CaretPoint
+      -----   ------------------------   --------------------     --------------------   ----------------------   ----------
+      0       View.viewport_position()   _marker_stack_icon_0 --> _marker_stack_icon_0   [{a: 16332, b: 16332}]   16332
+      1       View.viewport_position()   _marker_stack_icon_1 --> _marker_stack_icon_1   [{a:  8710, b:  8710}]    8710
+      2       View.viewport_position()   _marker_stack_icon_2 --> _marker_stack_icon_2   [{a: 32998, b: 32998}]   32998
+      3       View.viewport_position()   _marker_stack_icon_3 --> _marker_stack_icon_3   [{a:   425, b:   425}]     425
+      4       View.viewport_position()   _marker_stack_icon_4 --> _marker_stack_icon_4   [{a:    16, b:    16}]      16
+      -------------------------------------------------------
+                               ^
+                               |
+                           stack top
+
+
+And this is how MarkerStack:
+
+- tracks a stack of caret locations,
+- marks each one with a gutter icon, and
+- persists state across sessions.
+
+
+
+Commands
+********
 
 PUSH
 ====
+
+Command Palette:  "MarkerStack: Push Marker"
+Command        :  marker_stack_push
 
 1.  View Settings object is retrieved.
 2.  Marker Stack object is attempted to be retrieved from
@@ -93,6 +203,9 @@ linking a Marker with a Region icon using a unique key was adopted.
 POP
 ===
 
+Command Palette:  "MarkerStack: Pop Marker"
+Command        :  marker_stack_pop
+
 **Important:**  while editing of the Buffer occurs, the region icons represent
 "anchors" within the Buffer text, and so they stay current.  On the other hand, the
 Markers are stored in the stack with a mere "copy" of the Point values(locations in
@@ -114,30 +227,30 @@ icon which returns the current point in
     View's region dictionary, causing that icon to be removed.
 6.  The saved Viewport position is retrieved from the Marker and
     restored in the View.
-7.  Move cursor to previously-stored position.  This is done by:
+7.  Move caret to previously-stored position.  This is done by:
     - All current "Selections" (i.e. carets) are removed from the View, and
     - replaced with one new region created from the retrieved caret Point.
 
 
 
-Design Thoughts on Scroll State
-*******************************
+Design Flaw with Scroll State
+*****************************
 
-Restoring "scroll state" along with restoring a previous cursor position is "sort of"
+Restoring "scroll state" along with restoring a previous caret position is "sort of"
 what we want.  However, Sublime Text's "scroll state" is called Viewport Position,
 which is not quite what we want.
 
-What we DO want is that when the position of the cursor is saved, it is a certain
+What we DO want is that when the position of the caret is saved, it is a certain
 percentage of the way down the screen.  And that percentage would need to hold, no
 matter if the number of lines of visible text in the window changed before the
 positions were "popped".  If the percent is 30% of the way down the screen when
 there are 116 lines of visible text, and then the window size gets changed so there
 are now only 50 lines of text showing, when the position is popped, the viewport
-is scrolled so that the cursor is still 30% of the way down the screen --- if that
+is scrolled so that the caret is still 30% of the way down the screen --- if that
 is doable....
 
 It is possible Viewport Position would be fine as a start, but there appears to be a
-group of View-object position queries with the names "viewport", "window", "layout"
+group of View-object position functions with the names "viewport", "window", "layout"
 and "text" relating to position and DIP [1]_ coordinates may be applicable to this
 problem, and they are found right underneath these 2 functions in the
 ``python38/sublime.py`` file which leads me to believe that they are related.
@@ -166,28 +279,17 @@ functions and so far they have been sufficient to the needs of the testers.
 
 
 
-How Marker Stack Saves State Across Sessions:  View Settings
-************************************************************
+How MarkerStack Saves State Across Sessions:  View Settings
+***********************************************************
 
-Persistence across sessions is achieved by storing the list of markers (Marker Stack)
-with the View settings.  Unfortunately, it doesn't take custom objects (e.g. a list
-of MarkerStackMarker objects), but it does take Python objects (e.g. lists,
-dictionaries, lists of dictionaries, etc.).
+Persistence across sessions is achieved by:
 
-Fortunately and unfortunately, it's not a simple dictionary that retains its state
-or *actually* gives a reference to objects inside it.
+- storing the list of markers (MarkerStack) with the View settings, and
+- marking the Markers (gutter icons saved with View Regions) with the
+  sublime.RegionFlags.PERSISTENT flag.
 
-:Reading:   To get things from it, you have to make a call (get()) and what you get is
-            not a reference, but a COPY, so updating it doesn't do anything to the
-            actual settings.
-
-:Writing:   To update anything in it, you have to make a call (set()), and what you
-            pass to it is COPIED to the internal data.  So you STILL don't have a
-            reference to it.
-
-The gutter icons are also set with the sublime.RegionFlags.PERSISTENT flag so that
-they too are saved across sessions.  Together, these two lists form a "unit" tied
-together in this Marker Stack subsystem.
+Together, these two lists form a "unit" tied together in this MarkerStack
+Package.
 
 
 
@@ -241,7 +343,7 @@ _rflags         = (
 _stack_key      = '_marker_stack'
 _vp_pos_key     = 'vp'
 _icon_key       = 'id'
-_debugging      = 1          # Levels: 0, 1, 2, 3...
+_debugging      = 1          # Integer:  Levels:  0, 1, 2, 3...
 
 
 # =========================================================================
@@ -456,7 +558,7 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
 class MarkerStackPopCommand(sublime_plugin.TextCommand):
     def run(self, edit, testing=False):
         """
-        Pop Marker off stack, restoring that cursor- and viewport positions.
+        Pop Marker off stack, restoring that caret- and viewport positions.
         """
         global _rgn_key_prefix
         global _stack_key
@@ -508,7 +610,7 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
             vppos = marker[_vp_pos_key]
             vw.set_viewport_position(vppos, animate=_animate_scroll)
 
-            # 7.  Move cursor to previously-stored position.  This is done by:
+            # 7.  Move caret to previously-stored position.  This is done by:
             #     - All current "Selections" (i.e. carets) are removed from the View, and
             #     - replaced with one new region created from the retrieved caret Point.
             # For safety....
