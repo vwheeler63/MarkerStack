@@ -218,7 +218,8 @@ _animate_scroll = False
 
 # Regions (Gutter Icons)
 _rgn_key_prefix = '_marker_stack_icon_'
-_icon_path      = 'Packages/MarkerStack/marker_gutter_icon.png'
+_icon_path      = 'Packages/MarkerStack/marker.png'
+_icon_mult_path = 'Packages/MarkerStack/marker_multiple.png'
 _icon_color     = 'region.purplish'
 _rflags         = (
                         sublime.RegionFlags.PERSISTENT  # Save across sessions
@@ -229,7 +230,7 @@ _rflags         = (
 _stack_key      = '_marker_stack'
 _vp_pos_key     = 'vp'
 _icon_key       = 'id'
-_debugging      = 0          # Levels: 0, 1, 2, 3...
+_debugging      = 1          # Levels: 0, 1, 2, 3...
 
 
 # =========================================================================
@@ -265,12 +266,14 @@ def init():
 
     # Now we can fetch user-configurable values.
     _icon_path = ms_setting('ms_icon_path')
+    _icon_mult_path = ms_setting('ms_icon_mult_path')
     _icon_color = ms_setting('ms_icon_color')
     _animate_scroll = ms_setting('ms_animate_scrolling')
 
     if _debugging:
         print(f'{_pkg_name} loaded.')
         print(f'  Configured _icon_path      = [{_icon_path}]')
+        print(f'  Configured _icon_mult_path = [{_icon_mult_path}]')
         print(f'  Configured _icon_color     = [{_icon_color}]')
         print(f'  Configured _animate_scroll = [{_animate_scroll}]')
 
@@ -360,22 +363,55 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
         #     ``marker_idx``.
         marker_idx = len(mstack)
 
-        # 5.  A new Marker is created and pushed (appended) onto the stack.
+        # 5.  Gather View's existing regions associated with MarkerStack.
+        rgn_list = []
+        for marker in mstack:
+            icon_key = marker[_icon_key]
+            rgns = vw.get_regions(icon_key)
+            rgn_list.append(rgns[0])
+
+        # 6.  Find out whether the current caret's LINE already exists in MarkerStack regions.
+        #     `same_line_count` = 0 (doesn't occur)
+        #     `same_line_count` = 1 (does occur)
+        curr_line_no = vw.rowcol(pt)[0]
+        if _debugging:
+            print(f'curr_line_no=[{curr_line_no}]')
+        same_line_count = 0
+
+        for rgn in rgn_list:
+            line_no = vw.rowcol(rgn.b)[0]
+            if _debugging:
+                print(f'line_no=[{line_no}]')
+            if line_no == curr_line_no:
+                same_line_count += 1
+                if _debugging:
+                    print(f'line_no match found. Exiting loop. same_line_count=[{same_line_count}]')
+                break
+
+        # 7.  Determine which icon:  single or multiple => `icon_path`
+        if same_line_count > 0:
+            icon_path = _icon_mult_path
+        else:
+            icon_path = _icon_path
+
+        if _debugging:
+            print(f'icon_path=[{icon_path}]')
+
+        # 8.  Created and push (append) new Marker onto the stack.
         icon_key = f'{_rgn_key_prefix}{marker_idx}'
         marker = MarkerStackMarker(vppos, icon_key)
         mstack.append(marker)
 
-        # 6.  The modified stack (list) is saved to the View Settings with
-        #     ``_stack_key``.
+        # 9.  Save modified stack (list) to View Settings with ``_stack_key``.
         vw_settings.set(_stack_key, mstack)
 
-        # 7.  An icon for the new Marker is added to the left gutter by:
-        #     - formulating a unique key from the Marker just PUSH-ed
-        #       (``_rgn_key_prefix`` + ``marker_idx``),
-        #     - a new Region is created from the saved Caret position,
-        #     - ``vw.add_regions(icon_key, [rgn], _icon_color, _icon_path, _rflags)``
+        # 10. Add icon for new Marker to left gutter by:
+        #     - formulate a unique key from the Marker just PUSH-ed
+        #       (``_rgn_key_prefix`` + ``marker_idx``, done above),
+        #     - create new Region from saved Caret position,
+        #     - ``vw.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)``
         rgn = sublime.Region(pt)
-        vw.add_regions(icon_key, [rgn], _icon_color, _icon_path, _rflags)
+        vw.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)
 
         if _debugging:
             print(f'Pushed marker: {marker}')

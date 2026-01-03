@@ -15,7 +15,8 @@
 	// - "dot"
 	// - "circle"
 	// - "bookmark"
-	"ms_icon_path": "Packages/MarkerStack/marker_gutter_icon.png",
+	"ms_icon_path": "Packages/MarkerStack/marker.png",
+	"ms_icon_mult_path": "Packages/MarkerStack/marker_multiple.png",
 
 	// String.  Icon Color
 	// -------------------
