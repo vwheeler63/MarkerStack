@@ -363,60 +363,83 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
         #     ``marker_idx``.
         marker_idx = len(mstack)
 
-        # 5.  Gather View's existing regions associated with MarkerStack.
-        rgn_list = []
+        # 5.  Pass through the stack, discovering which regions are on the same line
+        #     as the Marker being pushed.  For those that are, move them from the
+        #     View regions collection and push them into these 2 lists as a stack:
+        #     `rgns_on_same_line`
+        #     `rgns_on_same_line_keys`
+        #
+        curr_line_no = vw.rowcol(pt)[0]
+        rgns_on_same_line = []
+        rgns_on_same_line_keys = []
+
         for marker in mstack:
             icon_key = marker[_icon_key]
             rgns = vw.get_regions(icon_key)
-            rgn_list.append(rgns[0])
-
-        # 6.  Find out whether the current caret's LINE already exists in MarkerStack regions.
-        #     `same_line_count` = 0 (doesn't occur)
-        #     `same_line_count` = 1 (does occur)
-        curr_line_no = vw.rowcol(pt)[0]
-        if _debugging:
-            print(f'curr_line_no=[{curr_line_no}]')
-        same_line_count = 0
-
-        for rgn in rgn_list:
+            rgn = rgns[0]
             line_no = vw.rowcol(rgn.b)[0]
-            if _debugging:
-                print(f'line_no=[{line_no}]')
             if line_no == curr_line_no:
-                same_line_count += 1
+                # Add key and region to the 2 lists.
+                rgns_on_same_line.append(rgn)
+                rgns_on_same_line_keys.append(icon_key)
+                # Remove temporarily from View regions collection.
+                vw.erase_regions(icon_key)
                 if _debugging:
-                    print(f'line_no match found. Exiting loop. same_line_count=[{same_line_count}]')
-                break
+                    print(f'temporarily removing (same line)=[{icon_key}]')
 
-        # 7.  Determine which icon:  single or multiple => `icon_path`
-        if same_line_count > 0:
-            icon_path = _icon_mult_path
-        else:
-            icon_path = _icon_path
-
-        if _debugging:
-            print(f'icon_path=[{icon_path}]')
-
-        # 8.  Created and push (append) new Marker onto the stack.
+        # 6.  Created and push (append) new Marker onto the stack.
         icon_key = f'{_rgn_key_prefix}{marker_idx}'
         marker = MarkerStackMarker(vppos, icon_key)
         mstack.append(marker)
-
-        # 9.  Save modified stack (list) to View Settings with ``_stack_key``.
-        vw_settings.set(_stack_key, mstack)
-
-        # 10. Add icon for new Marker to left gutter by:
-        #     - formulate a unique key from the Marker just PUSH-ed
-        #       (``_rgn_key_prefix`` + ``marker_idx``, done above),
-        #     - create new Region from saved Caret position,
-        #     - ``vw.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)``
-        rgn = sublime.Region(pt)
-        vw.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)
-
         if _debugging:
             print(f'Pushed marker: {marker}')
-            print(f'Stack        : {mstack}')
-            print(f'rgn          : {rgn}')
+
+        # 7.  Now add new region and key representing current caret.
+        rgns_on_same_line.append(sublime.Region(pt))
+        rgns_on_same_line_keys.append(icon_key)
+        if _debugging:
+            print(f'same line rgns stack=[{rgns_on_same_line}]')
+            print(f'same line icon keys stack=[{rgns_on_same_line_keys}]')
+
+        # 8.  Save modified stack (list) to View Settings with ``_stack_key``.
+        vw_settings.set(_stack_key, mstack)
+
+        # 9.  Put stack of icons for Markers (regions + keys) back into
+        #     View regions collection, in reverse order (newest first since
+        #     first icon in gutter stays on top of all others on same line).
+        #
+        #     The 2 lists now contain at least 1 item:  the current Marker.  If
+        #     they contain more than 1 item, the current Marker is at the end of
+        #     the list, and the older regions + keys are earlier in the list.
+        #
+        #     Example of `rgns_on_same_line` and rgns_on_same_line_keys`:
+        #     -----------------------------------------------------------
+        #     Index   Key
+        #     0       _marker_stack_icon_3   <-- oldest Marker
+        #     1       _marker_stack_icon_6   <-- old Marker
+        #     2       _marker_stack_icon_11  <-- current Marker
+        #
+        #     Now add this list (stack) back into the View regions collection,
+        #     oldest first.
+        if _debugging:
+            print('Putting into gutter:')
+
+        while rgns_on_same_line_keys:
+            icon_key = rgns_on_same_line_keys.pop()
+            rgn      = rgns_on_same_line.pop()
+
+            # Only the last one on the same line will have a "singular" Marker icon.
+            # All the rest will have the "multiple" icon.
+            if len(rgns_on_same_line_keys) > 0:
+                icon_path = _icon_mult_path
+            else:
+                icon_path = _icon_path
+
+            vw.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)
+            if _debugging:
+                print(f'  icon_key =[{icon_key}]')
+                print(f'  icon_path=[{icon_path}]')
+                print(f'  rgn      =[{rgn}]')
 
 
 class MarkerStackPopCommand(sublime_plugin.TextCommand):
