@@ -53,9 +53,27 @@ Requirements
 4.  Views with no MarkerStack information must not be required to store
     anything across Sublime Text sessions.
 
+5.  On the first pushed Marker on a line, the gutter icon should represent a
+    SINGLE Marker.
+
+6.  When the last marker on a line has been popped, the gutter icon goes away.
+
+7.  When there are 2 or more Markers on the same line, the gutter icon should
+    represent MULTIPLE Markers.
+
+8.  When the number of Markers on the same line changes from 2 to 1 after
+    a Marker has been popped, the gutter icon should
+    revert to representing a SINGLE Marker again.
+
 
 Resources
 =========
+
+This is unfortunately long, but it is important, because of a large amount
+of undocumented (but consistent) behavior on Sublime Text's part.  The below
+is the only place this author knows of that documents some of this behavior,
+and it is worth preserving.  (Especially the "Limitations" listed below,
+some of which had to be discovered empirically by tests.)
 
 - A View's Settings object (a representation of which is returned with
   ``self.view.settings()``) stores its content across sessions.  A whole
@@ -81,14 +99,17 @@ Resources
   and stores THAT.  So there is no way to get an actual reference to the
   objects stored inside a View's Settings object --- only copies.
 
-  Limitation:  simply storing caret position and viewport position
-  (scroll state) would not be adequate because when text is added or
-  deleted above the marker, the integer stored and retrieved for caret
-  position would become invalid, and there would be no way to understand
-  how to adjust it, and it would be horribly complex (impractical) to
-  keep it adjusted with every user keystroke.
+  Limitation:
 
-- A View also is able to store a set of regions referenced with a unique
+      Simply storing caret position and viewport position (scroll state)
+      would not be adequate because when text is added or deleted above the
+      marker, the integer stored and retrieved for caret position would
+      become invalid, and there would be no way to understand how to adjust
+      it, and it would be horribly complex (impractical) to keep it
+      adjusted with every user keystroke.
+
+
+- A View also is able to store a set of Regions referenced with a unique
   key, stored, retrieved and removed via:
 
   .. code-block:: py
@@ -99,21 +120,92 @@ Resources
 
   respectively.  And with the ``flags`` argument, one can cause:
 
-  - only the icon submitted to be visible (actual region would be hidden), and
+  - only the icon submitted to be visible (actual Region would be hidden), and
   - it can be made to persist across Sublime Text sessions as long as the
     View remains open.
 
-  These regions DO move with the text when text is added and deleted above
-  them.  When retrieved with the key, the set of regions ONLY know about
-  the set of regions STORED, i.e. caret positions, and thus are NOT able to
+  These Regions DO move with the text when text is added and deleted above
+  them.  When retrieved with the key, the set of Regions ONLY know about
+  the set of Regions STORED, i.e. caret positions, and thus are NOT able to
   store anything else, such as viewport position (scroll state).
 
-  Limitation:  whenever you retrieve a set of regions, Sublime Text
-  PRE-SORTS them to be in top-to-bottom order, even if that is not the
-  order in which they were submitted!
+  Limitation #1:
 
-  Because of this limitation, one call to ``View.add_regions()`` can
-  only apply to ONE Marker, not more.
+      Whenever you retrieve a set of Regions, Sublime Text PRE-SORTS them to
+      be in top-to-bottom order, even if that is not the order in which
+      they were submitted!
+
+      Furthermore, Sublime Text can and does merge the Regions when they
+      occupy the same location!
+
+      Because of this limitation, one call to ``View.add_regions()`` can
+      only apply to ONE Marker, not more, even though the ``add_regions()``
+      function accepts a list with unlimited number of Regions in it.
+
+  Limitation #2:
+
+      This one is really weird.  When a set of Regions (each with its own
+      icon) are added to View Regions on the same line, Sublime Text
+      displays the icon with the unique key with the lowest value (i.e. min
+      ([key_list]) is the icon that will be displayed).
+
+      Thus, if the Regions (with icons) are added in this order:
+
+          icon_key ='_marker_stack_icon_16'
+          icon_path='Packages/MarkerStack/marker_multiple.png'
+          rgn      =Region(20552, 20552)
+          icon_key ='_marker_stack_icon_15'
+          icon_path='Packages/MarkerStack/marker_multiple.png'
+          rgn      =Region(20551, 20551)
+          icon_key ='_marker_stack_icon_14'
+          icon_path='Packages/MarkerStack/marker.png'
+          rgn      =Region(20550, 20550)
+
+      the icon that will be displayed is:  ``marker.png``, whereas if they
+      are added in this order:
+
+          icon_key ='_marker_stack_icon_14'
+          icon_path='Packages/MarkerStack/marker_multiple.png'
+          rgn      =Region(21421, 21421)
+          icon_key ='_marker_stack_icon_15'
+          icon_path='Packages/MarkerStack/marker_multiple.png'
+          rgn      =Region(21422, 21422)
+          icon_key ='_marker_stack_icon_16'
+          icon_path='Packages/MarkerStack/marker.png'
+                      rgn      =Region(21423, 21423)
+
+      even if the icon assignments are erroneous (i.e. #14 was the FIRST one
+      at that line, but is being given icon ``marker_multiple.png``), the
+      icon that will be displayed is:  ``marker_multiple.png``.
+
+      Because of this limitation, PUSHING a new marker has to go through extra
+      steps that assign 2 Regions (with icons) the wrong icon!  In other words,
+      Sublime Text APPEARS to discard any icons on the same line when
+      ``key > smallest_key_on_that_line``.  In other words, the ICONS appear
+      to be managed separately, NOT actually attached to the Region added.
+      So the concept that an icon "belongs with" a Region is NULL AND VOID,
+      and this is undocumented behavior.
+
+      The better solution on a PUSH operation is probably to:
+
+      - remove all Regions (which removes whatever icon is in the gutter), then
+
+      - add them back again, only this time using only the icon that should be
+        displayed.  Or else including NO icon for all except the last one, which
+        at least preserves the concept of "correctness" -- the only gutter icon
+        added then "goes with" with the Region that was added.
+
+      CONCLUSION:  gutter icons ARE NOT attached to the Region they are added with!
+      They are attached to the LINE!
+
+  Limitation #3:
+
+      Because of the above behavior, (icons are not factually connected to
+      Regions being added), POPPING a Region also needs to take extra steps
+      to use the above knowledge to revert the gutter icon back to the one
+      that represents a SINGLE Marker when the count of Markers on that
+      line switches from 2 to 1.
+
 
 - The two (View Settings and View Regions) cleverly used in combination,
   however, can make it work:
@@ -140,11 +232,25 @@ Resources
                                |
                            stack top
 
+  Note that the gutter icon is NOT associated with the regions submitted in
+  `view.add_regions()`, but rather is associated with the LINE of text in
+  the View.  This "odd" behavior makes for a lot of "hoop jumping", but now
+  that this is understood (through extensive testing), it can be navigated.
+
+  Icon adjustments are done only when the number of Markers on one line changes
+
+  - from 1 to 2, and
+  - from 2 to 1.
+
+  In all other cases, the call to `view.add_regions()` adds the appropriate
+  SINGLE icon, or removes the icon displayed when the stack becomes empty.
+
 
 And this is how MarkerStack:
 
 - tracks a stack of caret locations,
-- marks each one with a gutter icon, and
+- marks each one with a gutter icon,
+- shows gutter icons appropriate to the number of Markers on each line, and
 - persists state across sessions.
 
 
@@ -158,27 +264,19 @@ PUSH
 Command Palette:  "MarkerStack: Push Marker"
 Command        :  marker_stack_push
 
-1.  View Settings object is retrieved.
-2.  Marker Stack object is attempted to be retrieved from
-    View Settings with key ``_stack_key``.  If it is ``None``,
-    an empty list (the stack) is created.
-3.  Caret position and Viewport position are captured.
-4.  The index of where the new Marker will go is remembered in
-    ``marker_idx``.
-5.  A new Marker is created and pushed (appended) onto the stack.
-6.  The modified stack (list) is saved to the View Settings with
-    ``_stack_key``.
-7.  An icon for the new Marker is added to the left gutter by:
-    - formulating a unique key from the Marker just PUSH-ed
-      (``_rgn_key_prefix`` + ``marker_idx``),
-    - a new Region is created from the saved Caret position,
-    - ``vw.add_regions(new_rgn_key, [rgn], _icon_color, _icon_path, _rflags)``
-
-Originally it was tried to save all the left-gutter icons in a single region list
-with a single key, but it turned out that Sublime Text manages these independently
-and can and does merge them when they occupy the same location.  This made the
-region (icon) list go out of sync with the stack.  So the new method of positively
-linking a Marker with a Region icon using a unique key was adopted.
+1.  Retrieve View Settings object.
+2.  Attempt to retrieve Marker Stack object from View Settings with key
+    ``_stack_key``.  If ``None``, create an empty list (the stack).
+3.  Capture caret position and Viewport position.
+4.  Remember index of where new Marker will go in ``marker_idx``.
+5.  Note current line number and count number of Regions now on this
+    same line before the new Marker is added.  This needs to be done
+    while `mstack` and the View's Region dictionary are in sync.
+6.  Create and push new Marker onto stack.
+7.  Save modified stack (list) to View Settings with ``_stack_key``.
+8.  Add Region to View's Region dictionary.
+9.  If needed, adjust gutter icon displayed.   This needs to be done
+    while `mstack` and the View's Region dictionary are in sync.
 
 .. code-block:: text
 
@@ -206,30 +304,58 @@ POP
 Command Palette:  "MarkerStack: Pop Marker"
 Command        :  marker_stack_pop
 
-**Important:**  while editing of the Buffer occurs, the region icons represent
+**Important:**  while editing of the Buffer occurs, the Region icons represent
 "anchors" within the Buffer text, and so they stay current.  On the other hand, the
 Markers are stored in the stack with a mere "copy" of the Point values(locations in
 text) when the Marker was created.  And so this goes out of date. Because of this,
-the point in the Marker is updated before being used from the corresponding region
+the point in the Marker is updated before being used from the corresponding Region
 icon which returns the current point in
 
 1.  View Settings object is retrieved.
 2.  Marker Stack object is attempted to be retrieved from View Settings with
     key ``_stack_key``.  If it is ``None``, then the stack is empty and there
-    is nothing to do.  If it is not ``None``, then this sequence is continued.
+    is nothing to do.  Otherwise continue.
 3.  The top Marker is popped off the Marker Stack.
     If stack is now empty, then the key is erased from the View Settings,
     otherwise the remaining stack is saved back to View Settings.
-4.  The region (icon) is fetched from the left gutter (contains current
+4.  The Region (icon) is fetched from the left gutter (contains current
     position where we want to place the caret).  It is retrieved using the
     unique key stored inside the popped Marker object.
-5.  That set of 1 region (with that unique key) is removed from the
-    View's region dictionary, causing that icon to be removed.
+5.  That set of 1 Region (with that unique key) is removed from the
+    View's Region dictionary, causing that icon to be removed.
 6.  The saved Viewport position is retrieved from the Marker and
     restored in the View.
 7.  Move caret to previously-stored position.  This is done by:
     - All current "Selections" (i.e. carets) are removed from the View, and
-    - replaced with one new region created from the retrieved caret Point.
+    - replaced with one new Region created from the retrieved caret Point.
+8.  Finally, take the extra steps necessary to ensure that when the
+    count of Markers on that same line of text in the file is
+    reduced from 2 to 1, that the icon reverts back to the SINGLE
+    Marker icon again.  This isn't necessary if stack is now empty.
+
+
+DUMP
+====
+
+Command Palette:  "MarkerStack: Dump"
+Command        :  marker_stack_dump
+
+Print out MarkerStack data for current View to Console.
+
+1.  Retrieve View Settings object.
+2.  Marker Stack object is attempted to be retrieved from View Settings with
+    key ``_stack_key``.  If it is ``None``, then the stack is empty, print
+    "Marker Stack empty.".  Otherwise continue.
+    else:
+3.  For each Marker in stack:
+    - Retrieve its salient points:
+      - Index
+      - Regions Key
+    - Retrieve/compute salient points from associated View Regions list.
+      - Cursor Point
+      - Line number in text (zero-based)
+      - Column number in text (zero-based)
+    - Print them in readable table form.
 
 
 
@@ -343,7 +469,7 @@ _rflags         = (
 _stack_key      = '_marker_stack'
 _vp_pos_key     = 'vp'
 _icon_key       = 'id'
-_debugging      = 1          # Integer:  Levels:  0, 1, 2, 3...
+_debugging      = 2          # Integer:  Levels:  0, 1, 2, 3...
 
 
 # =========================================================================
@@ -363,9 +489,10 @@ def init():
     """
     Initialize plugin.
     """
-    global _pkg_name
     global _icon_path
+    global _icon_mult_path
     global _icon_color
+    global _animate_scroll
 
     # Set up default and overridable Package settings.
     # `ms_setting()` cannot be called until this is done.
@@ -400,6 +527,162 @@ def plugin_loaded():
 # =========================================================================
 
 
+def _dump_marker_stack_contents(view: sublime.View):
+    """
+    Display stack contents.
+    """
+    # 1.  Retrieve View Settings object.
+    vw_settings = view.settings()
+
+    # 2.  Marker Stack object is attempted to be retrieved from View Settings with
+    #     key ``_stack_key``.  If it is ``None``, then the stack is empty and there
+    #     is nothing to do.  If it is not ``None``, then this sequence is continued.
+    mstack = vw_settings.get(_stack_key)
+
+    if mstack is None:
+        print("Marker Stack empty.")
+    else:
+        # 3.  For each MarkerStackMarker in stack:
+        #     - Retrieve its salient points:
+        #       - Index
+        #       - Regions Key
+        #     - Retrieve/compute salient points from associated View Regions list.
+        #       - Cursor Point
+        #       - Line number in text (zero-based)
+        #       - Column number in text (zero-based)
+        #     - Print them in readable table form.
+        print('============================================')
+        print('Marker Stack contents:')
+        print('============================================')
+        print('Idx  Icon Key                Caret  Line:Col')
+        print('---  ---------------------  ------  --------')
+        #      99.  _marker_stack_icon_1
+        for i, marker in enumerate(mstack):
+            icon_key = marker[_icon_key]
+            rgns     = view.get_regions(icon_key)
+            # Certain rare things (e.g. exception in Plugin) can cause these two
+            # things (View Settings => stack, and View Regions) to go out of sync.
+            # This little precaution prevents an exception when that happens.
+            if rgns:
+                pt       = rgns[0].b
+                row, col = view.rowcol(pt)
+                row += 1
+                col += 1
+            else:
+                pt       = '?'
+                row, col = ('?', '?')
+            # Make them 1-based, since line numbers are 1-based.
+            print(f'{i:2}.  {icon_key:<21}  {pt:6}  {row:4}:{col}')
+
+
+def _count_of_regions_on_line(view: sublime.View, mstack: list, target_line_no: int) -> int:
+    """
+    Count number of Regions (storage of caret location) on line `target_line_no`.
+    """
+    result = 0
+
+    for marker in mstack:
+        icon_key = marker[_icon_key]
+        rgns = view.get_regions(icon_key)
+
+        # Certain rare things (e.g. exception in Plugin) can cause these two
+        # things (View Settings => mstack, and View Regions) to go out of sync.
+        # This little precaution prevents an exception when that happens.
+        if rgns:
+            rgn = rgns[0]
+            line_no = view.rowcol(rgn.b)[0]
+            if line_no == target_line_no:
+                result += 1
+
+    return result
+
+
+def _adjust_marker_icon_for_count_on_line(view: sublime.View, mstack: list, target_line_no: int, count: int):
+    """
+    Remove and replace icon on line `target_line_no` with the icon appropriate
+    to ``count`` Markers.  This requires removal of all regions on that line to
+    make the original icon go away.  Then they are added back in with the last
+    one getting the appropriate icon.
+
+    Use these 2 lists to store the regions and keys while they are being
+    removed from the View's Region dictionary:
+    `rgns_on_this_line`
+    `rgns_on_this_line_keys`
+    """
+    rgns_on_this_line = []
+    rgns_on_this_line_keys = []
+
+    for marker in mstack:
+        icon_key = marker[_icon_key]
+        rgns = view.get_regions(icon_key)
+        # Certain rare things (e.g. exception in Plugin) can cause these two
+        # things (View Settings => stack, and View Regions) to go out of sync.
+        # This little precaution prevents an exception when that happens.
+        if rgns:
+            rgn = rgns[0]
+            line_no = view.rowcol(rgn.b)[0]
+            if line_no == target_line_no:
+                # Add key and Region to the 2 lists.
+                rgns_on_this_line.append(rgn)
+                rgns_on_this_line_keys.append(icon_key)
+                # Remove Region temporarily from View's Region dictionary.
+                view.erase_regions(icon_key)
+                if _debugging:
+                    print(f'Temporarily removing (same line)=[{icon_key}]')
+
+    # ---------------------------------------------------------------------
+    # Put list of Regions back into View's Regions dictionary.
+    # Only the LAST Region will get an icon.  Reason:  after the call
+    # to ``add_regions()`` returns, the icon is no longer associated
+    # with the Region just added (if it ever was).  Instead it is
+    # associated with the LINE OF TEXT in the View.  So this is merely
+    # a way of keeping things "neat".
+    #
+    # The LAST item in both lists now represents the most recent Marker on
+    # line ``target_line_no``.  Both lists are guaranteed to have at least
+    # 1 element in them.  If they contain more than 1 item, the newest
+    # Marker is at the end of the list, and the older Regions + keys are
+    # earlier in the list.
+    #
+    # Example of `rgns_on_this_line` and `rgns_on_this_line_keys`:
+    # -----------------------------------------------------------
+    # Index   Key
+    # 0       _marker_stack_icon_3   <-- oldest Marker
+    # 1       _marker_stack_icon_6   <-- old Marker
+    # 2       _marker_stack_icon_11  <-- newest Marker
+    #
+    #     Now add this list (stack) back into the View Regions dictionary,
+    #     oldest first.
+    # ---------------------------------------------------------------------
+
+    # The ``icon_path`` computed here will be sent with the LAST region
+    # passed to ``add_regions()``.  All the rest will have no icon.
+    if count > 1:
+        icon_path = _icon_mult_path
+    else:
+        icon_path = _icon_path
+
+    if _debugging:
+        print(f'Adding icon [{os.path.basename(icon_path)}] into gutter:')
+
+    while rgns_on_this_line_keys:
+        icon_key = rgns_on_this_line_keys.pop()
+        rgn      = rgns_on_this_line.pop()
+
+        if len(rgns_on_this_line_keys) == 0:
+            view.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)
+            if _debugging:
+                print(f'  icon_key ={icon_key!r}')
+                print(f'  icon_path={icon_path!r}')
+                print(f'  rgn      ={rgn!r}')
+        else:
+            view.add_regions(icon_key, [rgn], _icon_color, '', _rflags)
+            if _debugging:
+                print(f'  icon_key ={icon_key!r}')
+                print(f'  icon_path=""')
+                print(f'  rgn      ={rgn!r}')
+
+
 class MarkerStackMarker(dict):
     """ -------------------------------------------------------------------
     Interestingly, the reason this class inherits from ``dict`` is because
@@ -420,8 +703,6 @@ class MarkerStackMarker(dict):
                       the marker's index.
     ------------------------------------------------------------------- """
     def __init__(self, vp: (float, float), icon_key: str):
-        global _vp_pos_key
-        global _icon_key
         self[_vp_pos_key] = vp
         self[_icon_key]   = icon_key
 
@@ -433,7 +714,7 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
     def run(self, edit, testing=False):
         """
         A Marker PUSH is legal regardless of whether any text is selected.  The
-        position of the caret (i.e. region.b) is used to get the Point to be saved.
+        position of the caret (i.e. Region.b) is used to get the Point to be saved.
         The current viewport position is saved with it.  Because the Point saved can
         move around as further editing occurs, it is saved ONLY with the Marker ICON
         in the left gutter, and not saved elsewhere since the value would not be
@@ -448,111 +729,71 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
         each time the Marker Stack changes:
 
         - View's settings are stored and retrieved with key `_stack_key`.
+        - Region at caret is added to View Regions dictionary with unique key
+          (stored with Marker in stack), and with flags telling it to persist
+          across sessions.
         """
-        global _rgn_key_prefix
-        global _icon_path
-        global _icon_color
-        global _rflags
-        global _stack_key
-        global _debugging
-
-        # 1.  View Settings object is retrieved.
+        # 1.  Retrieve View Settings object.
         vw = self.view
         vw_settings = vw.settings()
 
-        # 2.  Marker Stack object is attempted to be retrieved from
-        #     View Settings with key ``_stack_key``.  If it is ``None``,
-        #     an empty list (the stack) is created.
+        # 2.  Attempt to retrieve Marker Stack object from View Settings with key
+        #     ``_stack_key``.  If ``None``, create an empty list (the stack).
         mstack = vw_settings.get(_stack_key)
 
         if mstack is None:
             mstack = []
 
-        # 3.  Caret position and Viewport position are captured.
+        # 3.  Capture caret position and Viewport position.
         pt = vw.sel()[0].b
         vppos = vw.viewport_position()
 
-        # 4.  The index of where the new Marker will go is remembered in
-        #     ``marker_idx``.
+        # 4.  Remember index of where new Marker will go in ``marker_idx``.
         marker_idx = len(mstack)
 
-        # 5.  Pass through the stack, discovering which regions are on the same line
-        #     as the Marker being pushed.  For those that are, move them from the
-        #     View regions collection and push them into these 2 lists as a stack:
-        #     `rgns_on_same_line`
-        #     `rgns_on_same_line_keys`
-        #
+        # 5.  Note current line number and count number of Regions now on this
+        #     same line before the new Marker is added.  This needs to be done
+        #     while `mstack` and the View's Region dictionary are in sync.
         curr_line_no = vw.rowcol(pt)[0]
-        rgns_on_same_line = []
-        rgns_on_same_line_keys = []
+        if _debugging:
+            print(f'{curr_line_no=}')
+        prev_rgn_count_on_line = _count_of_regions_on_line(vw, mstack, curr_line_no)
+        if _debugging:
+            print(f'Found {prev_rgn_count_on_line} regions on zero-based line {curr_line_no}.')
 
-        for marker in mstack:
-            icon_key = marker[_icon_key]
-            rgns = vw.get_regions(icon_key)
-            rgn = rgns[0]
-            line_no = vw.rowcol(rgn.b)[0]
-            if line_no == curr_line_no:
-                # Add key and region to the 2 lists.
-                rgns_on_same_line.append(rgn)
-                rgns_on_same_line_keys.append(icon_key)
-                # Remove temporarily from View regions collection.
-                vw.erase_regions(icon_key)
-                if _debugging:
-                    print(f'temporarily removing (same line)=[{icon_key}]')
-
-        # 6.  Created and push (append) new Marker onto the stack.
+        # 6.  Create and push new Marker onto stack.
         icon_key = f'{_rgn_key_prefix}{marker_idx}'
         marker = MarkerStackMarker(vppos, icon_key)
         mstack.append(marker)
-        if _debugging:
-            print(f'Pushed marker: {marker}')
 
-        # 7.  Now add new region and key representing current caret.
-        rgns_on_same_line.append(sublime.Region(pt))
-        rgns_on_same_line_keys.append(icon_key)
-        if _debugging:
-            print(f'same line rgns stack=[{rgns_on_same_line}]')
-            print(f'same line icon keys stack=[{rgns_on_same_line_keys}]')
-
-        # 8.  Save modified stack (list) to View Settings with ``_stack_key``.
+        # 7.  Save modified stack (list) to View Settings with ``_stack_key``.
         vw_settings.set(_stack_key, mstack)
-
-        # 9.  Put stack of icons for Markers (regions + keys) back into
-        #     View regions collection, in reverse order (newest first since
-        #     first icon in gutter stays on top of all others on same line).
-        #
-        #     The 2 lists now contain at least 1 item:  the current Marker.  If
-        #     they contain more than 1 item, the current Marker is at the end of
-        #     the list, and the older regions + keys are earlier in the list.
-        #
-        #     Example of `rgns_on_same_line` and rgns_on_same_line_keys`:
-        #     -----------------------------------------------------------
-        #     Index   Key
-        #     0       _marker_stack_icon_3   <-- oldest Marker
-        #     1       _marker_stack_icon_6   <-- old Marker
-        #     2       _marker_stack_icon_11  <-- current Marker
-        #
-        #     Now add this list (stack) back into the View regions collection,
-        #     oldest first.
         if _debugging:
-            print('Putting into gutter:')
+            print(f'Pushed marker: {marker!r}')
 
-        while rgns_on_same_line_keys:
-            icon_key = rgns_on_same_line_keys.pop()
-            rgn      = rgns_on_same_line.pop()
+        # 8.  Add Region to View's Region dictionary.
+        rgn = sublime.Region(pt)
 
-            # Only the last one on the same line will have a "singular" Marker icon.
-            # All the rest will have the "multiple" icon.
-            if len(rgns_on_same_line_keys) > 0:
-                icon_path = _icon_mult_path
-            else:
-                icon_path = _icon_path
+        if prev_rgn_count_on_line == 0:
+            # First icon.  Passing a real icon here works as expected.
+            icon_path = _icon_path
+        else:
+            # Passing an icon to `add_regions()` after there is already a
+            # gutter icon on this line, DOES NOT in fact change the already-
+            # existing icon on in the gutter!  That has to be done by
+            # special operation later.  So `icon_path` is left empty so it
+            # doesn't "seem like" we are causing a new icon to show up.
+            icon_path = ''
 
-            vw.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)
-            if _debugging:
-                print(f'  icon_key =[{icon_key}]')
-                print(f'  icon_path=[{icon_path}]')
-                print(f'  rgn      =[{rgn}]')
+        vw.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)
+
+        # 9.  If needed, adjust gutter icon displayed.   This needs to be done
+        #     while `mstack` and the View's Region dictionary are in sync.
+        #     This is why this is being done AFTER the call to `add_regions().
+        if prev_rgn_count_on_line == 1:
+            # Marker count on this line just changed from 1 to 2.  Gutter
+            # icon change is needed to show MULTIPLE Marker icon.
+            _adjust_marker_icon_for_count_on_line(vw, mstack, curr_line_no, 2)
 
 
 class MarkerStackPopCommand(sublime_plugin.TextCommand):
@@ -560,12 +801,6 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
         """
         Pop Marker off stack, restoring that caret- and viewport positions.
         """
-        global _rgn_key_prefix
-        global _stack_key
-        global _vp_pos_key
-        global _icon_key
-        global _debugging
-
         # 1.  View Settings object is retrieved.
         vw = self.view
         vw_settings = vw.settings()
@@ -578,9 +813,6 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
         if mstack is None:
             if _debugging:
                 print("Marker Stack empty.")
-
-            # Erase key from regions if not already done.
-            vw.erase_regions(_rgn_key_prefix)
         else:
             # 3.  The top Marker is popped off the Marker Stack.
             #     If stack is now empty, then the key is erased from the View Settings,
@@ -588,21 +820,21 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
             marker = mstack.pop()
 
             if _debugging:
-                print(f'Popped marker: {marker}')
+                print(f'Popped Marker: {marker}')
 
             if len(mstack) == 0:
                 vw_settings.erase(_stack_key)
             else:
                 vw_settings.set(_stack_key, mstack)
 
-            # 4.  The region (icon) is fetched from the left gutter (contains current
+            # 4.  The Region (icon) is fetched from the left gutter (contains current
             #     position where we want to place the caret).  It is retrieved using the
             #     unique key stored inside the popped Marker object.
             icon_key = marker[_icon_key]
             rgns = vw.get_regions(icon_key)
 
-            # 5.  That set of 1 region (with that unique key) is removed from the
-            #     View's region dictionary, causing that icon to be removed.
+            # 5.  That set of 1 Region (with that unique key) is removed from the
+            #     View's Region dictionary, causing that icon to be removed.
             vw.erase_regions(icon_key)
 
             # 6.  The saved Viewport position is retrieved from the Marker and
@@ -612,14 +844,37 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
 
             # 7.  Move caret to previously-stored position.  This is done by:
             #     - All current "Selections" (i.e. carets) are removed from the View, and
-            #     - replaced with one new region created from the retrieved caret Point.
+            #     - replaced with one new Region created from the retrieved caret Point.
             # For safety....
-            if len(rgns) > 0:
+            if rgns:
                 rgn = rgns[0]
                 sel_list = vw.sel()
                 sel_list.clear()
                 sel_list.add(rgn)
 
                 if _debugging:
-                    print(f'Popped region: {rgn}')
+                    print(f'Popped Region: {rgn}')
+                    if len(mstack) == 0:
+                        print("Marker Stack now empty.")
+
+                # 8.  Finally, take the extra steps necessary to ensure that when the
+                #     count of Markers on that same line of text in the file is
+                #     reduced from 2 to 1, that the icon reverts back to the SINGLE
+                #     Marker icon again.  This isn't necessary if stack is now empty.
+                if mstack:
+                    curr_line_no = vw.rowcol(rgn.b)[0]
+
+                    if _count_of_regions_on_line(vw, mstack, curr_line_no) == 1:
+                        # Marker count on this line just changed from 1 to 2.  Gutter
+                        # icon change is needed to show MULTIPLE Marker icon.
+                        _adjust_marker_icon_for_count_on_line(vw, mstack, curr_line_no, 1)
+
+
+class MarkerStackDumpCommand(sublime_plugin.TextCommand):
+    def run(self, edit, testing=False):
+        """
+        Display stack contents.
+        """
+        _dump_marker_stack_contents(self.view)
+
 

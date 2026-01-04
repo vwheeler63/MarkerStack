@@ -31,4 +31,8 @@
 		"caption": "MarkerStack: Pop Marker",
 		"command": "marker_stack_pop"
 	},
+	{
+		"caption": "MarkerStack: Dump",
+		"command": "marker_stack_dump"
+	},
 ]
