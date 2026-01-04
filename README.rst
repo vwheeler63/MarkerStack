@@ -4,10 +4,11 @@ Sublime Text MarkerStack Package
 
 Push a "marker" (position in text) onto a "Marker Stack", with the ability to come
 back to that point later by popping it off the Marker Stack.  A symbol appears in the
-left gutter showing what line it is on.  The marker moves with the text when text is
-inserted or deleted before it.  Stack size is virtually unlimited.  The Marker Stack
-is "remembered" until the document is closed, including across Sublime Text
-sessions.
+left gutter showing what line it is on.  The gutter icon changes to a "multiple
+marker" icon when there is more than one Marker on the same line.  The marker moves
+with the text when text is inserted or deleted before it.  Stack size is virtually
+unlimited.  The Marker Stack is "remembered" until the View is closed, including
+across Sublime Text sessions.
 
 
 Introduction
@@ -166,12 +167,3 @@ Each View only stores MarkerStack information until the stack becomes empty, and
 that storage is removed again.  In other words, Views with no PUSHed cursor (caret)
 positions are not burdened with any kind of storage, including across Sublime Text
 sessions.
-
-
-MarkerStack Gutter Symbol
-*************************
-
-The ``marker_gutter_icon.png`` symbol was chosen over a "bookmark" symbol so as to be
-explicitly clear in the gutter that the saved position IS NOT a bookmark, which has
-different (persistent) behavior.  This symbol is intentionally suggestive of a stack,
-and different from any other symbols that appear in the editing area's left gutter.

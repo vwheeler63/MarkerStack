@@ -4,18 +4,18 @@
 // Note:  You may need to re-start Sublime Text in order to get changed
 //        configuration values to load.
 {
-	// String.  Path to Gutter Icon
-	// ------------------------------
+	// String.  Path to Gutter Icons
+	// -----------------------------
 	// This can be any 15x15 .PNG icon.  Its background should be transparent.
 	// Sublime Text uses a gray-scale map, so the color White will be the full
 	// color below, light gray will be a darker shade of that color, and dark
 	// gray will be a dark shade of that color.
-	// This can also be one of the following strings to use icons that are
+	// These can also be one of the following strings to use icons that are
 	// built into Sublime Text:
 	// - "dot"
 	// - "circle"
 	// - "bookmark"
-	"ms_icon_path": "Packages/MarkerStack/marker.png",
+	"ms_icon_path": "Packages/MarkerStack/marker_single.png",
 	"ms_icon_mult_path": "Packages/MarkerStack/marker_multiple.png",
 
 	// String.  Icon Color
