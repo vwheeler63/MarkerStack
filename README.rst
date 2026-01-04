@@ -152,12 +152,21 @@ Preferences > Package Settings > MarkerStack >
 Commands
 ********
 
-- MarkerStack: Push Marker    Push current caret + viewport position onto stack
-- MarkerStack: Pop Marker     Pop caret + viewport position off stack
-- MarkerStack: Dump           Dump MarkerStack data for current View, into Console output
-- MarkerStack: Open Readme    Open README (this file)
-- MarkerStack: Settings       Split-view of MarkerStack settings
-- MarkerStack: Key Bindings   Split-view of MarkerStack key bindings
++-----------------------------+-------------------------------------------------------------+
+| Command                     | Description                                                 |
++=============================+=============================================================+
+| MarkerStack: Push Marker    | Push current caret + viewport position onto stack           |
++-----------------------------+-------------------------------------------------------------+
+| MarkerStack: Pop Marker     | Pop caret + viewport position off stack                     |
++-----------------------------+-------------------------------------------------------------+
+| MarkerStack: Dump           | Dump MarkerStack data for current View, into Console output |
++-----------------------------+-------------------------------------------------------------+
+| MarkerStack: Open Readme    | Open README (this file)                                     |
++-----------------------------+-------------------------------------------------------------+
+| MarkerStack: Settings       | Split-view of MarkerStack settings                          |
++-----------------------------+-------------------------------------------------------------+
+| MarkerStack: Key Bindings   | Split-view of MarkerStack key bindings                      |
++-----------------------------+-------------------------------------------------------------+
 
 
 Storage
