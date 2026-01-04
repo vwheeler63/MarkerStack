@@ -4,8 +4,9 @@
 // Note:  You may need to re-start Sublime Text in order to get changed
 //        configuration values to load.
 {
-	// String.  Path to Gutter Icons
-	// -----------------------------
+	// String.  Path to SINGLE-Marker Gutter Icon
+	// ------------------------------------------
+	// Icon to use for when there is SINGLE Marker on a line.
 	// This can be any 15x15 .PNG icon.  Its background should be transparent.
 	// Sublime Text uses a gray-scale map, so the color White will be the full
 	// color below, light gray will be a darker shade of that color, and dark
@@ -16,6 +17,10 @@
 	// - "circle"
 	// - "bookmark"
 	"ms_icon_path": "Packages/MarkerStack/marker_single.png",
+
+	// String.  Path to MULTIPLE-Marker Gutter Icon
+	// --------------------------------------------
+	// Icon to use for when there are MULTIPLE Markers on the same line.
 	"ms_icon_mult_path": "Packages/MarkerStack/marker_multiple.png",
 
 	// String.  Icon Color
