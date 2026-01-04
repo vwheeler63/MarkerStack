@@ -86,7 +86,7 @@ The easiest way to set your key bindings is through the menu:
 You can copy/paste the commented out default key mappings into your
 ``User/Default.sublime-keymap``:
 
-.. code-block:: json
+.. code:: json
 
     [
         // --------------------------------------------------------------------
@@ -106,7 +106,7 @@ You can copy/paste the commented out default key mappings into your
 Or if you wanted to map them to [F4] and [Shift+F4] respectively, you could do
 something like this instead:
 
-.. code-block:: json
+.. code:: json
 
     [
         // --------------------------------------------------------------------
