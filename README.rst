@@ -1,21 +1,21 @@
-********************************
-Sublime Text MarkerStack Package
-********************************
+***********
+MarkerStack
+***********
 
-Push a "marker" (position in text) onto a "Marker Stack", with the ability to come
-back to that point later by popping it off the Marker Stack.  A symbol appears in the
-left gutter showing what line it is on.  The gutter icon changes to a "multiple
-marker" icon when there is more than one Marker on the same line.  The marker moves
-with the text when text is inserted or deleted before it.  Stack size is virtually
-unlimited.  The Marker Stack is "remembered" until the View is closed, including
-across Sublime Text sessions.
+MarkerStack is a package for Sublime Text that enables you to efficiently manage
+temporary moves away from your current editing position in Sublime Text 3 and
+onward by:
 
+- pushing a "Marker" (position in text) onto a "Marker Stack", with
 
-Introduction
-************
+- the ability to come back to that point later by popping it off the Marker Stack.
 
-MarkerStack is the missing tool for efficiently managing temporary moves away from
-your current editing position in Sublime Text 3 and onward.
+When a Marker is pushed, a symbol appears in the left gutter showing what line it is
+on.  The gutter icon changes to a "multiple Marker" icon when there is more than one
+Marker on the same line.  The marker moves with the text when text is inserted or
+deleted before it.  MarkerStack state is "remembered" until the View is closed,
+or until all Markers are popped off the stack, whichever comes first.
+
 
 The Problem MarkerStack Handles
 ===============================
