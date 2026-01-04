@@ -158,10 +158,10 @@ some of which had to be discovered empirically by tests.)
           icon_path='Packages/MarkerStack/marker_multiple.png'
           rgn      =Region(20551, 20551)
           icon_key ='_marker_stack_icon_14'
-          icon_path='Packages/MarkerStack/marker.png'
+          icon_path='Packages/MarkerStack/marker_single.png'
           rgn      =Region(20550, 20550)
 
-      the icon that will be displayed is:  ``marker.png``, whereas if they
+      the icon that will be displayed is:  ``marker_single.png``, whereas if they
       are added in this order:
 
           icon_key ='_marker_stack_icon_14'
@@ -171,7 +171,7 @@ some of which had to be discovered empirically by tests.)
           icon_path='Packages/MarkerStack/marker_multiple.png'
           rgn      =Region(21422, 21422)
           icon_key ='_marker_stack_icon_16'
-          icon_path='Packages/MarkerStack/marker.png'
+          icon_path='Packages/MarkerStack/marker_single.png'
                       rgn      =Region(21423, 21423)
 
       even if the icon assignments are erroneous (i.e. #14 was the FIRST one
@@ -457,7 +457,7 @@ _animate_scroll = False
 
 # Regions (Gutter Icons)
 _rgn_key_prefix = '_marker_stack_icon_'
-_icon_path      = 'Packages/MarkerStack/marker.png'
+_icon_path      = 'Packages/MarkerStack/marker_single.png'
 _icon_mult_path = 'Packages/MarkerStack/marker_multiple.png'
 _icon_color     = 'region.purplish'
 _rflags         = (
