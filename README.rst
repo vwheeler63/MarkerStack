@@ -42,6 +42,7 @@ editing position in the text.
 
 For additional details, see the module header comment in ``markerstack.py``.
 
+
 Why MarkerStack is Better than Bookmarks for Interruptions
 ==========================================================
 
