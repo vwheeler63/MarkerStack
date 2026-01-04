@@ -18,7 +18,7 @@ or until all Markers are popped off the stack, whichever comes first.
 
 
 The Problem MarkerStack Handles
-===============================
+*******************************
 
 There are many kinds of editing interruptions that happen regularly for most people
 using a text editor.  Examples:
@@ -44,7 +44,7 @@ For additional details, see the module header comment in ``markerstack.py``.
 
 
 Why MarkerStack is Better than Bookmarks for Interruptions
-==========================================================
+**********************************************************
 
 Using Sublime Text Bookmarks is a handy way to navigate repeatedly to different
 places in a file you are working on, but it leaves a gap of functionality that
