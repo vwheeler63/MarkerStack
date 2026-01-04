@@ -3,7 +3,7 @@ MarkerStack
 ***********
 
 MarkerStack is a package for Sublime Text that enables you to efficiently manage
-temporary moves away from your current editing position in Sublime Text 3 and
+temporary moves away from your current editing position in Sublime Text 4050 and
 onward by:
 
 - pushing a "Marker" (position in text) onto a "Marker Stack", with
