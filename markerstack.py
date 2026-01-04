@@ -37,7 +37,7 @@ Design
 Requirements
 ============
 
-1.  That it behaved like Multi-Edit Marker Stack, namely that Markers appeared
+1.  It should behave like Multi-Edit Marker Stack, namely that Markers appeared
     in the gutter, pushed onto an internal stack, and then as the Markers were
     popped off the stack, the caret position and scroll state would return to
     what they were when the Marker was pushed, with unlimited stack depth, and
@@ -64,6 +64,8 @@ Requirements
 8.  When the number of Markers on the same line changes from 2 to 1 after
     a Marker has been popped, the gutter icon should
     revert to representing a SINGLE Marker again.
+
+9.  Marker Icons should instantly update when settings for icons changes.
 
 
 Resources
@@ -447,29 +449,59 @@ import functools
 
 
 # =========================================================================
-# Configuration Values
+# Configuration
 # =========================================================================
+
 
 # General
 _pkg_name       = 'MarkerStack'
-_animate_scroll = False
-
+_debugging      = 0          # Integer:  Levels:  0, 1, 2, 3...
 
 # Regions (Gutter Icons)
 _rgn_key_prefix = '_marker_stack_icon_'
-_icon_path      = 'Packages/MarkerStack/marker_single.png'
-_icon_mult_path = 'Packages/MarkerStack/marker_multiple.png'
-_icon_color     = 'region.purplish'
 _rflags         = (
                         sublime.RegionFlags.PERSISTENT  # Save across sessions
                       | sublime.RegionFlags.HIDDEN      # Don't show selection, just the icon.
                   )
+_icons_changed  = False
 
 # Marker
 _stack_key      = '_marker_stack'
 _vp_pos_key     = 'vp'
 _icon_key       = 'id'
-_debugging      = 2          # Integer:  Levels:  0, 1, 2, 3...
+
+# Track on-settings-changed listener.
+_settings_chgd_listener_id = '_ms_settings_changed_tag'
+
+# Package Settings
+_pkg_settings_file = 'MarkerStack.sublime-settings'
+
+# User Configurable
+_icon_path      = 'Packages/MarkerStack/marker_single.png'
+_icon_mult_path = 'Packages/MarkerStack/marker_multiple.png'
+_icon_color     = 'region.purplish'
+_animate_scroll = False
+
+
+# =========================================================================
+# Settings Utilities
+# =========================================================================
+
+
+def ms_setting(key):
+    """
+    Get a MarkerStack setting from a cached settings object.
+    This function expects the following objects to already exist:
+
+    - ``ms_setting.obj``      a ``sublime.Settings`` object (looks like a dictionary)
+    - ``ms_setting.default``  a dictionary object with named default values
+
+    :param key:  name of setting whose value will be returned
+    """
+    assert ms_setting.default is not None, '`ms_setting.default` must exist before calling `ms_setting()`.'
+    assert ms_setting.obj is not None, '`ms_setting.obj` must exist before calling `ms_setting()`.'
+    default = ms_setting.default.get(key, None)
+    return ms_setting.obj.get(key, default)
 
 
 # =========================================================================
@@ -477,38 +509,250 @@ _debugging      = 2          # Integer:  Levels:  0, 1, 2, 3...
 # =========================================================================
 
 
-def ms_setting(key):
-    """
-    Get a MarkerStack setting from a cached settings object.
-    """
-    default = ms_setting.default.get(key, None)
-    return ms_setting.obj.get(key, default)
+def _dump_internal_values(descr: str):
+    if descr:
+        print(f'Internal values {descr}:')
+    else:
+        print(f'Internal values:')
+
+    print(f'  _icon_path      = {_icon_path}')
+    print(f'  _icon_mult_path = {_icon_mult_path}')
+    print(f'  _icon_color     = {_icon_color}')
+    print(f'  _animate_scroll = {_animate_scroll}')
+    print(f'  _icons_changed  = {_icons_changed}')
 
 
-def init():
-    """
-    Initialize plugin.
-    """
+def _dump_settings(descr: str):
+    if descr:
+        print(f'Settings {descr}:')
+    else:
+        print(f'Settings:')
+
+    print(f'  ms_icon_path         = {ms_setting("ms_icon_path")}')
+    print(f'  ms_icon_mult_path    = {ms_setting("ms_icon_mult_path")}')
+    print(f'  ms_icon_color        = {ms_setting("ms_icon_color")}')
+    print(f'  ms_animate_scrolling = {ms_setting("ms_animate_scrolling")}')
+
+
+def _establish_default_settings_once():
+    ms_setting.default = {
+        'ms_icon_path': _icon_path,
+        'ms_icon_mult_path': _icon_mult_path,
+        'ms_icon_color': _icon_color,
+        'ms_animate_scrolling': False,
+    }
+
+
+def _load_and_import_cached_settings():
     global _icon_path
     global _icon_mult_path
     global _icon_color
     global _animate_scroll
+    global _icons_changed
 
-    # Set up default and overridable Package settings.
-    # `ms_setting()` cannot be called until this is done.
-    ms_setting.obj = sublime.load_settings("MarkerStack.sublime-settings")
+    ms_setting.obj = sublime.load_settings(_pkg_settings_file)
 
-    ms_setting.default = {
-        "ms_icon_path": _icon_path,
-        "ms_icon_color": _icon_color,
-        "ms_animate_scrolling": False,
-    }
+    # if _debugging:
+    #     when = 'after loading from settings file'
+    #     _dump_settings(when)
+    #     _dump_internal_values(when)
+
+    # Prepare to detect icon changes.
+    prev_icon_path = _icon_path
+    prev_icon_mult_path = _icon_mult_path
+    prev_icon_color = _icon_color
+
+    # if _debugging:
+    #     print(f'{prev_icon_path=}')
+    #     print(f'{prev_icon_mult_path=}')
+    #     print(f'{prev_icon_color=}')
 
     # Now we can fetch user-configurable values.
     _icon_path = ms_setting('ms_icon_path')
     _icon_mult_path = ms_setting('ms_icon_mult_path')
     _icon_color = ms_setting('ms_icon_color')
     _animate_scroll = ms_setting('ms_animate_scrolling')
+
+    # Changed?
+    if (
+               _icon_path      != prev_icon_path
+            or _icon_mult_path != prev_icon_mult_path
+            or _icon_color     != prev_icon_color
+        ):
+        _icons_changed = True
+
+    # if _debugging:
+    #     when = 'after loading internal values from cached settings'
+    #     _dump_settings(when)
+    #     _dump_internal_values(when)
+
+
+class RegionInfo:
+    def __init__(self, rgns: list, line_no: int):
+        """ ---------------------------------------------------------------
+        Store data about regions stored with the View, in order to build a
+        new set of such regions with new icon settings.
+
+        :param rgns:     Region set retrieved by ``view.get_regions()``
+        :param line_no:  View's zero-based line number on which the region set
+                           (containing 1 region) was found
+        --------------------------------------------------------------- """
+        self.rgns = rgns
+        self.line_no = line_no
+
+    def __repr__(self):
+        return f'RegionInfo[{self.rgns}, {self.line_no}]'
+
+
+def _replace_all_gutter_icons_for_view(view: sublime.View):
+    """
+    This routine is called immediately after a settings change that involves
+    a change to the appearance of the Marker icons in the left gutter.
+
+    The algorithm used uses 2 dictionaries:
+
+    1.  ``region_data`` containing all pertinent info about the View's
+        Marker Regions as we remove them, so they can be put back using
+        the new Marker icons settings.  Contents:
+
+        - key = unique key for that region set (though it only has 1 region in it)
+        - value = RegionInfo
+            - rgns from ``view.get_regions()``
+            - zero-based line_no
+
+    2.  ``line_no_data``.  Contents:
+
+        - key = View's line number
+        - value count of markers that have that line number
+
+    This makes for a fast way to detect which icons need to get added back in.
+    It does not matter what order they are put back in.
+    """
+    vw_settings = view.settings()
+    mstack = vw_settings.get(_stack_key)
+
+    if mstack is not None:
+        region_data = {}
+        line_no_data = {}
+
+        for marker in mstack:
+            icon_key = marker[_icon_key]
+            rgns = view.get_regions(icon_key)
+            # Certain rare things (e.g. exception in Plugin) can cause these two
+            # things (View Settings => stack, and View Regions) to go out of sync.
+            # This little precaution prevents an exception when that happens.
+            if rgns:
+                # Add to `region_data` dictionary.
+                rgn = rgns[0]
+                line_no = view.rowcol(rgn.b)[0]
+                rgn_info = RegionInfo(rgns, line_no)
+                region_data[icon_key] = rgn_info
+
+                # Add to, or increase count, in `line_no_data` dictionary.
+                if line_no in line_no_data:
+                    line_no_data[line_no] += 1
+                else:
+                    line_no_data[line_no] = 1
+
+                # Remove `rgns` from View
+                view.erase_regions(icon_key)
+
+        if _debugging >= 2:
+            print(f'Dictionaries built for View [{view.view_id}]:')
+
+            print(f'  region_data:')
+            for icon_key in region_data:
+                print(f'    key={icon_key:21}  {region_data[icon_key]!r}')
+
+            print(f'  line_no_data:')
+            for line_no in line_no_data:
+                print(f'    line_no_data={line_no:2}  count={line_no_data[line_no]}')
+
+        # -----------------------------------------------------------------
+        # Now we use those 2 dictionaries to put new icons back into the
+        # View's Regions dictionary.
+        # -----------------------------------------------------------------
+        for icon_key in region_data:
+            if _debugging >= 2:
+                print(f'    Putting back:  key={icon_key:21}  {region_data[icon_key]!r}')
+            rgn_info = region_data[icon_key]
+            rgns     = rgn_info.rgns
+            line_no  = rgn_info.line_no
+            count    = line_no_data[line_no]
+
+            # Which icon?
+            if count > 1:
+                icon_path = _icon_mult_path
+            else:
+                icon_path = _icon_path
+
+            view.add_regions(icon_key, rgns, _icon_color, icon_path, _rflags)
+
+            if _debugging >= 2:
+                print(f'      icon_key ={icon_key!r}')
+                print(f'      icon_path={icon_path!r}')
+                print(f'      rgn      ={rgns[0]!r}')
+
+
+def _replace_gutter_icons_if_changed():
+    global _icons_changed
+
+    if _debugging >= 2:
+        print('>> In _replace_gutter_icons_if_changed()...')
+
+    if _icons_changed:
+        # Do this only once per icon-settings change.
+        _icons_changed = False
+
+        if _debugging:
+            print('  Handling changed icon settings...')
+
+        for win in sublime.windows():
+            if _debugging >= 2:
+                print(f'    Window id: {win.window_id}')
+            for view in win.views():
+                if _debugging >= 2:
+                    print(f'      View id: {view.view_id}')
+                # Act only on Views that have MarkerStack info.
+                vw_settings = view.settings()
+                mstack = vw_settings.get(_stack_key)
+
+                if mstack is not None:
+                    if _debugging >= 2:
+                        print(f'        View id: {view.view_id} has MarkerStack info.')
+                    _replace_all_gutter_icons_for_view(view)
+    else:
+        if _debugging:
+            print('    Icons did not change...')
+
+
+def _on_pkg_settings_change():
+    _load_and_import_cached_settings()
+    _replace_gutter_icons_if_changed()
+
+
+def plugin_loaded():
+    """
+    Initialize plugin.
+    """
+    if _debugging:
+        print('>> In plugin_loaded()...')
+    global _icons_changed
+
+    # Set up default and overridable Package settings.
+    # `ms_setting()` cannot be called until this is done.
+    _establish_default_settings_once();
+    _load_and_import_cached_settings();
+
+    # Don't trigger icon reload here.
+    if _debugging:
+        print(f'{_icons_changed=} before setting it FALSE.')
+    _icons_changed = False
+
+    # Establish event hook for "settings changed" event. This allows the user
+    # to change package settings and have them be instantly reflected in the
+    # Sublime Text UI.
+    ms_setting.obj.add_on_change(_settings_chgd_listener_id, _on_pkg_settings_change)
 
     if _debugging:
         print(f'{_pkg_name} loaded.')
@@ -518,8 +762,13 @@ def init():
         print(f'  Configured _animate_scroll = [{_animate_scroll}]')
 
 
-def plugin_loaded():
-    init()
+def plugin_unloaded():
+    if ms_setting.obj:
+        ms_setting.obj.clear_on_change(_settings_chgd_listener_id)
+
+    debugging = ms_setting('pc_debugging')
+    if debugging:
+        print(f'{_pkg_name}:  Plugin unloaded.')
 
 
 # =========================================================================

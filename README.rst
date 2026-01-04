@@ -23,11 +23,10 @@ The Problem MarkerStack Handles
 There are many kinds of editing interruptions that happen regularly for most people
 using a text editor.  Examples:
 
-- go elsewhere in a file to copy a line of text (e.g. source code) onto the
-  clipboard, so that it can be pasted where you are editing;
-- handle something elsewhere in the file before you forget it;
-- you get interrupted and need to move your cursor away from where you are
-  editing in order to handle the need brought by the interruption.
+- go elsewhere in a file to look up something and/or copy it to the clipboard;
+- handle a change required elsewhere in the file before you forget it;
+- you get interrupted (e.g. phone call or request) and need to move your cursor
+  away from where you are currently editing to handle it.
 
 With MarkerStack, you can PUSH your cursor (caret) position in a Sublime Text View
 with one keystroke, go do something elsewhere in the same file, and then POP your

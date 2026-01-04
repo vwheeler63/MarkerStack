@@ -2,10 +2,16 @@ MarkerStack ChangeLog
 =====================
 
 
-Version 1.1.0 (2026-01-04)
---------------------------
+Version 1.2.0 (2026-01-04 15:55)
+--------------------------------
 
-- added MUTLIPLE marker when multiple markers are on the same line;
+- Added instant response to change in Marker icon settings across all Views.
+
+
+Version 1.1.0 (2026-01-04 11:00)
+--------------------------------
+
+- Added MUTLIPLE marker when multiple markers are on the same line;
 - investigated and documented undocumented behavior about how
   Sublime Text ACTUALLY handles the left-gutter icon;
 - refined and thoroughly documented gutter-icon management;
