@@ -218,19 +218,19 @@ some of which had to be discovered empirically by tests.)
 
   Thus:
 
-      Marker Stack Elements                                       View Regions
-      =======================================================     ==========================================================
-      Index   ViewportPos                RegionsKey               Key                    Regions                  CaretPoint
-      -----   ------------------------   --------------------     --------------------   ----------------------   ----------
-      0       View.viewport_position()   _marker_stack_icon_0 --> _marker_stack_icon_0   [{a: 16332, b: 16332}]   16332
-      1       View.viewport_position()   _marker_stack_icon_1 --> _marker_stack_icon_1   [{a:  8710, b:  8710}]    8710
-      2       View.viewport_position()   _marker_stack_icon_2 --> _marker_stack_icon_2   [{a: 32998, b: 32998}]   32998
-      3       View.viewport_position()   _marker_stack_icon_3 --> _marker_stack_icon_3   [{a:   425, b:   425}]     425
-      4       View.viewport_position()   _marker_stack_icon_4 --> _marker_stack_icon_4   [{a:    16, b:    16}]      16
-      -------------------------------------------------------
-                               ^
-                               |
-                           stack top
+             Marker Stack (in View Settings)                           View Regions
+      =============================================     ===========================================
+      Index   Viewport Position          RegionsKey     Key          Regions                  Caret
+      -----   ------------------------   ----------     ----------   ----------------------   -----
+      0       view.viewport_position()   _ms_icon_0 --> _ms_icon_0   [{a: 16332, b: 16332}]   16332
+      1       view.viewport_position()   _ms_icon_1 --> _ms_icon_1   [{a:  8710, b:  8710}]    8710
+      2       view.viewport_position()   _ms_icon_2 --> _ms_icon_2   [{a: 32998, b: 32998}]   32998
+      3       view.viewport_position()   _ms_icon_3 --> _ms_icon_3   [{a:   425, b:   425}]     425
+      4       view.viewport_position()   _ms_icon_4 --> _ms_icon_4   [{a:    16, b:    16}]      16
+      ---------------------------------------------
+                           ^
+                           |
+                       stack top
 
   Note that the gutter icon is NOT associated with the regions submitted in
   `view.add_regions()`, but rather is associated with the LINE of text in
@@ -552,11 +552,11 @@ def _dump_marker_stack_contents(view: sublime.View):
         #       - Column number in text (zero-based)
         #     - Print them in readable table form.
         print('============================================')
-        print('Marker Stack contents:')
+        print('Marker Stack Contents:')
         print('============================================')
         print('Idx  Icon Key                Caret  Line:Col')
         print('---  ---------------------  ------  --------')
-        #      99.  _marker_stack_icon_1
+        #      99.  _marker_stack_icon_99  999999  9999:999
         for i, marker in enumerate(mstack):
             icon_key = marker[_icon_key]
             rgns     = view.get_regions(icon_key)
