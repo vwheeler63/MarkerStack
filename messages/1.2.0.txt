@@ -1,0 +1,4 @@
+Version 1.2.0 (2026-01-04 15:55)
+--------------------------------
+
+- Added instant response to change in Marker icon settings across all Views.

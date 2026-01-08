@@ -17,8 +17,8 @@ deleted before it.  MarkerStack state is "remembered" until the View is closed,
 or until all Markers are popped off the stack, whichever comes first.
 
 
-The Problem MarkerStack Handles
-*******************************
+The Problem MarkerStack Solves
+******************************
 
 There are many kinds of editing interruptions that happen regularly for most people
 using a text editor.  Examples:
