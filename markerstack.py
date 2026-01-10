@@ -763,7 +763,7 @@ def plugin_loaded():
 
 
 def plugin_unloaded():
-    if ms_setting.obj:
+    if hasattr(ms_setting, 'obj'):
         ms_setting.obj.clear_on_change(_settings_chgd_listener_id)
 
     debugging = ms_setting('pc_debugging')
