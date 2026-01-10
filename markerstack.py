@@ -528,18 +528,18 @@ def _dump_settings(descr: str):
     else:
         print(f'Settings:')
 
-    print(f'  ms_icon_path         = {ms_setting("ms_icon_path")}')
-    print(f'  ms_icon_mult_path    = {ms_setting("ms_icon_mult_path")}')
-    print(f'  ms_icon_color        = {ms_setting("ms_icon_color")}')
-    print(f'  ms_animate_scrolling = {ms_setting("ms_animate_scrolling")}')
+    print(f'  icon_path         = {ms_setting("icon_path")}')
+    print(f'  icon_mult_path    = {ms_setting("icon_mult_path")}')
+    print(f'  icon_color        = {ms_setting("icon_color")}')
+    print(f'  animate_scrolling = {ms_setting("animate_scrolling")}')
 
 
 def _establish_default_settings_once():
     ms_setting.default = {
-        'ms_icon_path': _icon_path,
-        'ms_icon_mult_path': _icon_mult_path,
-        'ms_icon_color': _icon_color,
-        'ms_animate_scrolling': False,
+        'icon_path': _icon_path,
+        'icon_mult_path': _icon_mult_path,
+        'icon_color': _icon_color,
+        'animate_scrolling': False,
     }
 
 
@@ -568,10 +568,10 @@ def _load_and_import_cached_settings():
     #     print(f'{prev_icon_color=}')
 
     # Now we can fetch user-configurable values.
-    _icon_path = ms_setting('ms_icon_path')
-    _icon_mult_path = ms_setting('ms_icon_mult_path')
-    _icon_color = ms_setting('ms_icon_color')
-    _animate_scroll = ms_setting('ms_animate_scrolling')
+    _icon_path = ms_setting('icon_path')
+    _icon_mult_path = ms_setting('icon_mult_path')
+    _icon_color = ms_setting('icon_color')
+    _animate_scroll = ms_setting('animate_scrolling')
 
     # Changed?
     if (

@@ -16,12 +16,12 @@
 	// - "dot"
 	// - "circle"
 	// - "bookmark"
-	"ms_icon_path": "Packages/MarkerStack/marker_single.png",
+	"icon_path": "Packages/MarkerStack/marker_single.png",
 
 	// String.  Path to MULTIPLE-Marker Gutter Icon
 	// --------------------------------------------
 	// Icon to use for when there are MULTIPLE Markers on the same line.
-	"ms_icon_mult_path": "Packages/MarkerStack/marker_multiple.png",
+	"icon_mult_path": "Packages/MarkerStack/marker_multiple.png",
 
 	// String.  Icon Color
 	// -------------------
@@ -37,7 +37,7 @@
 	// - "region.bluish"
 	// - "region.purplish"
 	// - "region.pinkish"
-	"ms_icon_color": "region.purplish",
+	"icon_color": "region.purplish",
 
 	// Animate Scrolling?
 	// ------------------
@@ -49,5 +49,5 @@
 	// whether that scrolling is animated or not:  animated scrolling shows your
 	// text "swish by" visually (which takes about 1/20th of a second), whereas
 	// no animation makes the scrolling happen instantly.
-	"ms_animate_scrolling": false,
+	"animate_scrolling": false,
 }
