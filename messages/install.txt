@@ -18,7 +18,7 @@ View with one keystroke, go do something elsewhere in the same file, and then
 POP your cursor position with another keystroke, to instantly be back where
 you left off, without having to remember where it is.
 
-Marker Stack data is saved across Sublime Text sessions, for those occasions when
+MarkerStack data is saved across Sublime Text sessions, for those occasions when
 handling an interruption might span across Sublime Text sessions.
 
 Using MarkerStack is significantly more efficient than setting a Bookmark for
@@ -37,7 +37,7 @@ Quick Start
 -----------
 
 Review the README and decide what keys you want to map the PUSH/POP functions to.
-Via the menu, go to Preferences > Package Settings > Marker Stack > Key Bindings
+Via the menu, go to Preferences > Package Settings > MarkerStack > Key Bindings
 and map your PUSH and POP keys (see README "Getting Started" section).
 
 Problems?

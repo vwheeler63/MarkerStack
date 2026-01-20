@@ -1,20 +1,37 @@
 """
-Marker Stack Subsystem
-**********************
+MarkerStack Subsystem
+*********************
 
 Documentation Contents:
 
 - Usage
-- Marker Stack Object
+- Commands
+
+    - PUSH
+    - POP
+    - DUMP
+
+- Design
+
+    - Requirements
+    - Resources
+
+- Design Flaw with Scroll State
+- How MarkerStack Saves State Across Sessions:  View Settings
+- MarkerStack Object
 
 See README.rst for more details.
 
 Code Contents:
 
-- Private configuration variables
+- Configuration
+- Settings Utilities
 - Events (Package initialization/configuration)
-- MarkerStackPushCommand
-- MarkerStackPopCommand
+- Commands and Related Classes
+
+    - MarkerStackPushCommand
+    - MarkerStackPopCommand
+    - MarkerStackDumpCommand
 
 
 
@@ -40,15 +57,14 @@ Requirements
 1.  It should behave like Multi-Edit Marker Stack, namely that Markers appeared
     in the gutter, pushed onto an internal stack, and then as the Markers were
     popped off the stack, the caret position and scroll state would return to
-    what they were when the Marker was pushed, with unlimited stack depth, and
+    where they were when the Marker was pushed, with unlimited stack depth, and
     no action (safe) when attempting to pop from an empty stack.
 
-2.  That its state across all open Views needed to persist across Sublime
-    Text sessions.
+2.  Its state across all open Views needs to persist across Sublime Text sessions.
 
-3.  That when text was inserted and deleted ABOVE the Marker, that the
-    Marker needed to MOVE WITH the text, i.e. retain the same position
-    in the text, even though the text moved.
+3.  When text was inserted and deleted ABOVE a Marker, the Marker needed to
+    MOVE WITH the text, i.e. retain the same position in the text, even though
+    the text moved.
 
 4.  Views with no MarkerStack information must not be required to store
     anything across Sublime Text sessions.
@@ -220,7 +236,7 @@ some of which had to be discovered empirically by tests.)
 
   Thus:
 
-             Marker Stack (in View Settings)                           View Regions
+             MarkerStack (in View Settings)                            View Regions
       =============================================     ===========================================
       Index   Viewport Position          RegionsKey     Key          Regions                  Caret
       -----   ------------------------   ----------     ----------   ----------------------   -----
@@ -267,7 +283,7 @@ Command Palette:  "MarkerStack: Push Marker"
 Command        :  marker_stack_push
 
 1.  Retrieve View Settings object.
-2.  Attempt to retrieve Marker Stack object from View Settings with key
+2.  Attempt to retrieve MarkerStack object from View Settings with key
     ``_stack_key``.  If ``None``, create an empty list (the stack).
 3.  Capture caret position and Viewport position.
 4.  Remember index of where new Marker will go in ``marker_idx``.
@@ -283,7 +299,7 @@ Command        :  marker_stack_push
 .. code-block:: text
 
                             View Settings[_stack_key]
-    Left Gutter             Marker Stack (list)
+    Left Gutter             MarkerStack (list)
     ----------------        ---------------------------
     RgnIcon[rgn_key] <----> rgn_key = Marker[_icon_key]
     RgnIcon[rgn_key] <----> rgn_key = Marker[_icon_key]
@@ -314,7 +330,7 @@ the point in the Marker is updated before being used from the corresponding Regi
 icon which returns the current point in
 
 1.  View Settings object is retrieved.
-2.  Marker Stack object is attempted to be retrieved from View Settings with
+2.  MarkerStack object is attempted to be retrieved from View Settings with
     key ``_stack_key``.  If it is ``None``, then the stack is empty and there
     is nothing to do.  Otherwise continue.
 3.  The top Marker is popped off the Marker Stack.
@@ -345,7 +361,7 @@ Command        :  marker_stack_dump
 Print out MarkerStack data for current View to Console.
 
 1.  Retrieve View Settings object.
-2.  Marker Stack object is attempted to be retrieved from View Settings with
+2.  MarkerStack object is attempted to be retrieved from View Settings with
     key ``_stack_key``.  If it is ``None``, then the stack is empty, print
     "Marker Stack empty.".  Otherwise continue.
     else:
@@ -421,8 +437,8 @@ Package.
 
 
 
-Marker Stack Object
-*******************
+MarkerStack Object
+******************
 
 The Marker Stack proper is kept in the View settings, but only when needed.  It is
 deleted when not needed, so that this Package does not force every View to have one.
@@ -783,7 +799,7 @@ def _dump_marker_stack_contents(view: sublime.View):
     # 1.  Retrieve View Settings object.
     vw_settings = view.settings()
 
-    # 2.  Marker Stack object is attempted to be retrieved from View Settings with
+    # 2.  MarkerStack object is attempted to be retrieved from View Settings with
     #     key ``_stack_key``.  If it is ``None``, then the stack is empty and there
     #     is nothing to do.  If it is not ``None``, then this sequence is continued.
     mstack = vw_settings.get(_stack_key)
@@ -986,7 +1002,7 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
         vw = self.view
         vw_settings = vw.settings()
 
-        # 2.  Attempt to retrieve Marker Stack object from View Settings with key
+        # 2.  Attempt to retrieve MarkerStack object from View Settings with key
         #     ``_stack_key``.  If ``None``, create an empty list (the stack).
         mstack = vw_settings.get(_stack_key)
 
@@ -1054,7 +1070,7 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
         vw = self.view
         vw_settings = vw.settings()
 
-        # 2.  Marker Stack object is attempted to be retrieved from View Settings with
+        # 2.  MarkerStack object is attempted to be retrieved from View Settings with
         #     key ``_stack_key``.  If it is ``None``, then the stack is empty and there
         #     is nothing to do.  If it is not ``None``, then this sequence is continued.
         mstack = vw_settings.get(_stack_key)
