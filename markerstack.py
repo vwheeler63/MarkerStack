@@ -378,52 +378,6 @@ Print out MarkerStack data for current View to Console.
 
 
 
-Design Flaw with Scroll State in Version 1.0
-********************************************
-
-Restoring "scroll state" along with restoring a previous caret position is "sort of"
-what we want.  However, Sublime Text's "scroll state" is called Viewport Position,
-which is not quite what we want.
-
-What we DO want is that when the position of the caret is saved, it is a certain
-percentage of the way down the screen.  And that percentage would need to hold, no
-matter if the number of lines of visible text in the window changed before the
-positions were "popped".  If the percent is 30% of the way down the screen when
-there are 116 lines of visible text, and then the window size gets changed so there
-are now only 50 lines of text showing, when the position is popped, the viewport
-is scrolled so that the caret is still 30% of the way down the screen --- if that
-is doable....
-
-It is possible Viewport Position would be fine as a start, but there appears to be a
-group of View-object position functions with the names "viewport", "window", "layout"
-and "text" relating to position and DIP [1]_ coordinates may be applicable to this
-problem, and they are found right underneath these 2 functions in the
-``python38/sublime.py`` file which leads me to believe that they are related.
-
-    viewport_position(self) -> Vector:
-        # :returns: The offset of the viewport in layout coordinates.
-
-    set_viewport_position(self, xy: Vector, animate=True):
-        # Scrolls the viewport to the given layout position.
-
-As of 29-May-2025, so far, we have been experimenting with just using the above
-functions and so far they have been sufficient to the needs of the testers.
-
-.. [1]  DIP stands for "device-independent pixel".  It is a unit of length, typically
-        applied to describing a location on a computer monitor, and is defined more
-        thoroughly at:  https://en.wikipedia.org/wiki/Device-independent_pixel
-
-        Sublime Text uses a data type called a `DIP`, which is a type definition from
-        `sublime_types.py` and is shown below.  Note also that type `Vector`
-        is an (X,Y) coordinate pair that uses type `DIP`:
-
-        DIP: TypeAlias = 'float'
-        Vector: TypeAlias = 'Tuple[DIP, DIP]'
-
-        The 2 functions named above return, and accept, `Vector` types respectively.
-
-
-
 How MarkerStack Saves State Across Sessions:  View Settings
 ***********************************************************
 
@@ -458,6 +412,139 @@ structure:
                              // `set_viewport_position()`.
     }
 
+
+
+Design Flaw with Scroll State in Version 1.0
+********************************************
+
+Restoring Viewport position along with restoring a previous caret position is "sort of"
+what we want.  However, Sublime Text's Viewport position is no longer appropriate if
+a large amount of text has been added or deleted above the pushed Marker.  Reason:
+it is basically the number of pixels the Viewport has been scrolled down from the top
+of the text, and the POPPED caret will have significantly moved in the above case!
+
+What we DO want is that when the position of the caret is saved, it is a certain
+percentage of the way down the screen.  And that percentage would need to hold, no
+matter if the number of lines of visible text in the window changed before the
+positions were "popped".  If the percent is 30% of the way down the screen when
+there are 116 lines of visible text, and then the window size gets changed so there
+are now only 50 lines of text showing, when the position is popped, the viewport
+is scrolled so that the caret is still 30% of the way down the screen --- if that
+is doable....
+
+For version 1.0, simply restoring the Viewport Position is fine as a start, but there
+appears to be a group of View-object position functions with the names "viewport",
+"window", "layout" and "text" relating to position and DIP [1]_ coordinates may be
+applicable to this problem, and they are found right underneath these 2 functions in
+the ``python38/sublime.py`` file which leads me to believe that they are related.
+
+    viewport_position(self) -> Vector:
+        # :returns: The offset of the viewport in layout coordinates.
+
+    set_viewport_position(self, xy: Vector, animate=True):
+        # Scrolls the viewport to the given layout position.
+
+As of 29-May-2025, so far, we have been experimenting with just using the above
+functions and so far they have been sufficient to the needs of the testers.
+
+
+
+Solving this Design Flaw in Version 2.0
+***************************************
+
+Indeed, there is a whole View's Viewport API that gives us the power to accomplish
+the desired plan above:  to preserve the percentage of the way down the Viewport
+for the POPPED caret.  Definitions:
+
+DIP
+    TypeAlias = 'float' containing a distance/length measurement.  DIP stands
+    for device- or density-independent pixels, a unit of length based on a
+    "reference screen" with 160 DIP.  Thus, 1 DIP = 1/160 inch = 0.00625 inch.
+    We can think of DIP units as "pixels".
+
+Vector
+    TypeAlias = 'Tuple[DIP, DIP]' = (xf, yf)
+
+Point
+    TypeAlias = 'int' containing a zero-based character offset within a View's
+    Buffer.
+
+Viewport
+    The visible area of editable text, between the left and right gutters and
+    above any horizontal scrollbar at the bottom of the View.
+
+Layout
+    The entire rectangular area of existing text in a View's Buffer, rendered
+    in the current font and font size, whether it is visible or not.
+
+    The Layout's dimensions are exactly the DIP width and height of the text
+    itself, after being rendered.  These dimensions can be larger or smaller
+    than the dimensions of the Viewport.
+
+===========================================================================
+Given a Point ``pt``, this is how we compute what percentage of the way down
+it is in the Viewport:
+
+Given:  ``pt`` is the caret Point that is being pushed onto the MarkerStack.
+
+>>> _, dip_viewport_is_scrolled_down = view.viewport_position()
+>>> dip_viewport_is_scrolled_down
+1665.0
+>>> _, dip_pt_down_from_layout_top = view.text_to_layout(pt)
+>>> dip_pt_down_from_layout_top
+1755.0
+>>> dip_pt_from_top_of_viewport = dip_pt_down_from_layout_top - dip_viewport_is_scrolled_down
+>>> dip_pt_from_top_of_viewport
+90.0
+>>> _, viewport_height = view.viewport_extent()
+>>> viewport_height
+1381.0
+>>> pct_down_from_viewport_top = dip_pt_from_top_of_viewport / viewport_height
+>>> pct_down_from_viewport_top
+0.06517
+>>> # 6.5% down from the top of the Viewport.
+>>> # And so we save `pct_down_from_viewport_top` in the Marker.
+
+===========================================================================
+Now given a percent of the way down in the Viewport, this is how we scroll
+the Viewport vertically to place the restored caret at that same % of the
+way down in the Viewport, given the Viewport's current height.
+This is done mostly in reverse of how the percent was computed.
+
+Given:  ``rgn`` is the region retrieved from the View's Region Dictionary
+        containing the caret position being POPPED off the MarkerStack.
+
+>>> # Retrieve `pct_down_from_viewport_top` from Marker.
+>>> pct_down_from_viewport_top = marker[_pct_fr_top_key]
+>>> pct_down_from_viewport_top
+0.06517
+>>> _, viewport_height = view.viewport_extent()
+>>> viewport_height
+1381.0
+# -------------------------------------------------------------------------
+# The Viewport's height can be different from original height, but we use
+# original value for illustration.
+# -------------------------------------------------------------------------
+>>> dip_pt_from_top_of_viewport = viewport_height * pct_down_from_viewport_top
+>>> dip_pt_from_top_of_viewport
+90.0
+>>> pt = rgn.b
+>>> pt
+# -------------------------------------------------------------------------
+# Whatever ``pt`` was---it can be different now if text was added or
+# removed above the marker.
+# -------------------------------------------------------------------------
+>>> _, dip_pt_down_from_layout_top = view.text_to_layout(pt)
+>>> dip_pt_down_from_layout_top
+1755.0
+>>> dip_viewport_is_scrolled_down = dip_pt_down_from_layout_top - dip_pt_from_top_of_viewport
+>>> dip_viewport_is_scrolled_down
+1665.0
+>>> view.set_viewport_position((0.0, dip_viewport_is_scrolled_down), animate=_animate_scroll)
+# -------------------------------------------------------------------------
+# This scrolls the Viewport to correct position, and relative % position
+# within the Viewport is preserved.
+# -------------------------------------------------------------------------
 """
 import sublime
 import sublime_plugin
@@ -485,8 +572,8 @@ _icons_changed  = False
 
 # Marker
 _stack_key      = '_marker_stack'
-_vp_pos_key     = 'vp'
 _icon_key       = 'id'
+_pct_fr_top_key = 'pct'
 
 # Track on-settings-changed listener.
 _settings_chgd_listener_id = '_ms_settings_changed_tag'
@@ -969,12 +1056,12 @@ class MarkerStackMarker(dict):
                       like this:  '_marker_stack_icon_N' where 'N' is
                       the marker's index.
     ------------------------------------------------------------------- """
-    def __init__(self, vp: (float, float), icon_key: str):
-        self[_vp_pos_key] = vp
-        self[_icon_key]   = icon_key
+    def __init__(self, pct_down_from_viewport_top: float, icon_key: str):
+        self[_pct_fr_top_key] = pct_down_from_viewport_top
+        self[_icon_key]       = icon_key
 
     def __repr__(self):
-        return f'Marker[{self[_vp_pos_key]}, {self[_icon_key]}]'
+        return f'Marker[{self[_pct_fr_top_key]}, {self[_icon_key]}]'
 
 
 class MarkerStackPushCommand(sublime_plugin.TextCommand):
@@ -1013,7 +1100,7 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
 
         # 3.  Capture caret position and Viewport position.
         pt = vw.sel()[0].b
-        vppos = vw.viewport_position()
+        _, dip_vp_is_scrolled_down = vw.viewport_position()
 
         # 4.  Remember index of where new Marker will go in ``marker_idx``.
         marker_idx = len(mstack)
@@ -1028,9 +1115,15 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
         if _debugging:
             print(f'Found {prev_rgn_count_on_line} regions on zero-based line {curr_line_no}.')
 
+        # 5A.  Compute percent down from Viewport top where marker is.
+        _, dip_pt_down_from_text_top = vw.text_to_layout(pt)
+        dip_pt_from_top_of_vp = dip_pt_down_from_text_top - dip_vp_is_scrolled_down
+        _, vp_height = vw.viewport_extent()
+        pct_down_from_viewport_top = dip_pt_from_top_of_vp / vp_height
+
         # 6.  Create and push new Marker onto stack.
         icon_key = f'{_rgn_key_prefix}{marker_idx}'
-        marker = MarkerStackMarker(vppos, icon_key)
+        marker = MarkerStackMarker(pct_down_from_viewport_top, icon_key)
         mstack.append(marker)
 
         # 7.  Save modified stack (list) to View Settings with ``_stack_key``.
@@ -1104,12 +1197,7 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
             #     View's Region dictionary, causing that icon to be removed.
             vw.erase_regions(icon_key)
 
-            # 6.  The saved Viewport position is retrieved from the Marker and
-            #     restored in the View.
-            vppos = marker[_vp_pos_key]
-            vw.set_viewport_position(vppos, animate=_animate_scroll)
-
-            # 7.  Move caret to previously-stored position.  This is done by:
+            # 6.  Move caret to previously-stored position.  This is done by:
             #     - All current "Selections" (i.e. carets) are removed from the View, and
             #     - replaced with one new Region created from the retrieved caret Point.
             # For safety....
@@ -1118,6 +1206,19 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
                 sel_list = vw.sel()
                 sel_list.clear()
                 sel_list.add(rgn)
+
+                # 7.  Scroll Viewport so caret is same percent down from top of
+                #     screen as it was when it was pushed.  Note:  viewport's height
+                #     might also be different now.  We still use that percent.
+                #     This is done mostly in reverse of how the percent was computed.
+                #     ('vp' = viewport.)
+                pct_down_from_viewport_top = marker[_pct_fr_top_key]
+                _, vp_height = vw.viewport_extent()
+                dip_pt_from_top_of_vp = vp_height * pct_down_from_viewport_top
+                pt = rgn.b
+                _, dip_pt_down_from_text_top = vw.text_to_layout(pt)
+                dip_vp_is_scrolled_down = dip_pt_down_from_text_top - dip_pt_from_top_of_vp
+                vw.set_viewport_position((0.0, dip_vp_is_scrolled_down), animate=_animate_scroll)
 
                 if _debugging:
                     print(f'Popped Region: {rgn}')
