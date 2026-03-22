@@ -226,29 +226,30 @@ some of which had to be discovered empirically by tests.)
 
 
 - The two (View Settings and View Regions) cleverly used in combination,
-  however, can make it work:
+  however, make it work:
 
-      View Settings            View Regions
-      ----------------------   -----------------------
-      Stores a list (stack)    Stores a set of caret
-      of custom objects by     positions by unique key
-      key ('_marker_stack')    that move with the text
+      View Regions              View Settings
+      -----------------------   ----------------------
+      Stores a set of caret     Stores a list (stack)
+      positions (Points) by      of custom objects by
+      unique keys that move     key ('_marker_stack')
+      with the text.
 
   Thus:
 
-             MarkerStack (in View Settings)                            View Regions
-      =============================================     ===========================================
-      Index   Viewport Position          RegionsKey     Key          Regions                  Caret
-      -----   ------------------------   ----------     ----------   ----------------------   -----
-      0       view.viewport_position()   _ms_icon_0 --> _ms_icon_0   [{a: 16332, b: 16332}]   16332
-      1       view.viewport_position()   _ms_icon_1 --> _ms_icon_1   [{a:  8710, b:  8710}]    8710
-      2       view.viewport_position()   _ms_icon_2 --> _ms_icon_2   [{a: 32998, b: 32998}]   32998
-      3       view.viewport_position()   _ms_icon_3 --> _ms_icon_3   [{a:   425, b:   425}]     425
-      4       view.viewport_position()   _ms_icon_4 --> _ms_icon_4   [{a:    16, b:    16}]      16
-      ---------------------------------------------
-                           ^
-                           |
-                       stack top
+                     View Regions                            MarkerStack (in View Settings)
+      ===========================================     =============================================
+      Regions                  Point   Key            RegionsKey   Index   Viewport Position
+      ----------------------   -----   ----------     ----------   -----   ------------------------
+      [{a: 16332, b: 16332}]   16332   _ms_icon_0 <-- _ms_icon_0   0       view.viewport_position()
+      [{a:  8710, b:  8710}]    8710   _ms_icon_1 <-- _ms_icon_1   1       view.viewport_position()
+      [{a: 32998, b: 32998}]   32998   _ms_icon_2 <-- _ms_icon_2   2       view.viewport_position()
+      [{a:   425, b:   425}]     425   _ms_icon_3 <-- _ms_icon_3   3       view.viewport_position()
+      [{a:    16, b:    16}]      16   _ms_icon_4 <-- _ms_icon_4   4       view.viewport_position()
+                                                      ---------------------------------------------
+                                                                            ^
+                                                                            |
+                                                                        stack top
 
   Note that the gutter icon is NOT associated with the regions submitted in
   `view.add_regions()`, but rather is associated with the LINE of text in
@@ -377,8 +378,8 @@ Print out MarkerStack data for current View to Console.
 
 
 
-Design Flaw with Scroll State
-*****************************
+Design Flaw with Scroll State in Version 1.0
+********************************************
 
 Restoring "scroll state" along with restoring a previous caret position is "sort of"
 what we want.  However, Sublime Text's "scroll state" is called Viewport Position,
@@ -462,6 +463,7 @@ import sublime
 import sublime_plugin
 import os
 import functools
+from sublime_types import DIP, Vector, Point
 
 
 # =========================================================================

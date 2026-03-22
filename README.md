@@ -1,10 +1,8 @@
 # MarkerStack
 
-MarkerStack is a package for Sublime Text that enables you to efficiently manage temporary moves away from your current editing position in Sublime Text 4050 and onward by:
+MarkerStack is a package for Sublime Text that enables you to effectively "push and pop bookmarks" in Sublime Text 4050 and onward.
 
-- pushing a "Marker" (position in text) onto a "Marker Stack", with
-
-- the ability to come back to that point later by popping it off the Marker Stack.
+Think of it as giving you the ability to "push and pop bookmarks".
 
 When a Marker is pushed, a symbol appears in the left gutter showing what line it is on.  The gutter icon changes to a "multiple Marker" icon when there is more than one Marker on the same line.  The marker moves with the text when text is inserted or deleted before it.  MarkerStack state is "remembered" until the View is closed, or until all Markers are popped off the stack, whichever comes first.
 
@@ -13,9 +11,10 @@ When a Marker is pushed, a symbol appears in the left gutter showing what line i
 
 There are many kinds of editing interruptions that happen regularly for most people using a text editor.  Examples:
 
-- go elsewhere in a file to look up something and/or copy it to the clipboard;
-- handle a change required elsewhere in the file before you forget it;
-- you get interrupted (e.g. phone call or request) and need to move your cursor away from where you are currently editing to handle it.
+- go elsewhere in a file to look up something and/or copy it to the clipboard, so that it can be pasted where you are editing;
+- handle a change required elsewhere in the file before you forget it (e.g. a typo you just found and you know it occurred in other places);
+- you get interrupted and need to move your cursor away from where you are editing in order to handle the interruption;
+- your train of thought goes on a "detour" and you want to remember where you were before without having to find it again.
 
 With MarkerStack, you can PUSH your cursor (caret) position in a Sublime Text View with one keystroke, go do something elsewhere in the same file, and then POP your cursor position with another keystroke, to instantly be back where you left off, without having to remember where it is.
 

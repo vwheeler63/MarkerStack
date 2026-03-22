@@ -1,6 +1,4 @@
 Version 1.2.1 (20-Jan-2026 16:08)
 ---------------------------------
 
-- docs(README):  convert README to `.md` file
-- docs:  "Marker Stack" => "MarkerStack" where
-  referring to package and not to an actual stack.
+- Minor documentation updates
