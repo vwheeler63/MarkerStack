@@ -747,8 +747,8 @@ def _replace_all_gutter_icons_for_view(view: sublime.View):
     This makes for a fast way to detect which icons need to get added back in.
     It does not matter what order they are put back in.
     """
-    vw_settings = view.settings()
-    mstack = vw_settings.get(_stack_key)
+    view_settings = view.settings()
+    mstack = view_settings.get(_stack_key)
 
     if mstack is not None:
         region_data = {}
@@ -833,8 +833,8 @@ def _replace_gutter_icons_if_changed():
                 if _debugging >= 2:
                     print(f'      View id: {view.view_id}')
                 # Act only on Views that have MarkerStack info.
-                vw_settings = view.settings()
-                mstack = vw_settings.get(_stack_key)
+                view_settings = view.settings()
+                mstack = view_settings.get(_stack_key)
 
                 if mstack is not None:
                     if _debugging >= 2:
@@ -900,12 +900,12 @@ def _dump_marker_stack_contents(view: sublime.View):
     Display stack contents.
     """
     # 1.  Retrieve View Settings object.
-    vw_settings = view.settings()
+    view_settings = view.settings()
 
     # 2.  MarkerStack object is attempted to be retrieved from View Settings with
     #     key ``_stack_key``.  If it is ``None``, then the stack is empty and there
     #     is nothing to do.  If it is not ``None``, then this sequence is continued.
-    mstack = vw_settings.get(_stack_key)
+    mstack = view_settings.get(_stack_key)
 
     if mstack is None:
         print("Marker Stack empty.")
@@ -1102,19 +1102,19 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
           across sessions.
         """
         # 1.  Retrieve View Settings object.
-        vw = self.view
-        vw_settings = vw.settings()
+        view = self.view
+        view_settings = view.settings()
 
         # 2.  Attempt to retrieve MarkerStack object from View Settings with key
         #     ``_stack_key``.  If ``None``, create an empty list (the stack).
-        mstack = vw_settings.get(_stack_key)
+        mstack = view_settings.get(_stack_key)
 
         if mstack is None:
             mstack = []
 
         # 3.  Capture caret position and Viewport position.
-        pt = vw.sel()[0].b
-        _, dip_vp_is_scrolled_down = vw.viewport_position()
+        pt = view.sel()[0].b
+        _, dip_vp_is_scrolled_down = view.viewport_position()
 
         # 4.  Remember index of where new Marker will go in ``marker_idx``.
         marker_idx = len(mstack)
@@ -1122,17 +1122,17 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
         # 5.  Note current line number and count number of Regions now on this
         #     same line before the new Marker is added.  This needs to be done
         #     while `mstack` and the View's Region dictionary are in sync.
-        curr_line_no = vw.rowcol(pt)[0]
+        curr_line_no = view.rowcol(pt)[0]
         if _debugging:
             print(f'{curr_line_no=}')
-        prev_rgn_count_on_line = _count_of_regions_on_line(vw, mstack, curr_line_no)
+        prev_rgn_count_on_line = _count_of_regions_on_line(view, mstack, curr_line_no)
         if _debugging:
             print(f'Found {prev_rgn_count_on_line} regions on zero-based line {curr_line_no}.')
 
         # 5A.  Compute percent down from Viewport top where marker is.
-        _, dip_pt_down_from_text_top = vw.text_to_layout(pt)
+        _, dip_pt_down_from_text_top = view.text_to_layout(pt)
         dip_pt_from_top_of_vp = dip_pt_down_from_text_top - dip_vp_is_scrolled_down
-        _, vp_height = vw.viewport_extent()
+        _, vp_height = view.viewport_extent()
         pct_down_from_viewport_top = dip_pt_from_top_of_vp / vp_height
 
         # 6.  Create and push new Marker onto stack.
@@ -1141,7 +1141,7 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
         mstack.append(marker)
 
         # 7.  Save modified stack (list) to View Settings with ``_stack_key``.
-        vw_settings.set(_stack_key, mstack)
+        view_settings.set(_stack_key, mstack)
         if _debugging:
             print(f'Pushed marker: {marker!r}')
 
@@ -1159,7 +1159,7 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
             # doesn't "seem like" we are causing a new icon to show up.
             icon_path = ''
 
-        vw.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)
+        view.add_regions(icon_key, [rgn], _icon_color, icon_path, _rflags)
 
         # 9.  If needed, adjust gutter icon displayed.   This needs to be done
         #     while `mstack` and the View's Region dictionary are in sync.
@@ -1167,7 +1167,7 @@ class MarkerStackPushCommand(sublime_plugin.TextCommand):
         if prev_rgn_count_on_line == 1:
             # Marker count on this line just changed from 1 to 2.  Gutter
             # icon change is needed to show MULTIPLE Marker icon.
-            _adjust_marker_icon_for_count_on_line(vw, mstack, curr_line_no, 2)
+            _adjust_marker_icon_for_count_on_line(view, mstack, curr_line_no, 2)
 
 
 class MarkerStackPopCommand(sublime_plugin.TextCommand):
@@ -1176,13 +1176,13 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
         Pop Marker off stack, restoring that caret- and viewport positions.
         """
         # 1.  View Settings object is retrieved.
-        vw = self.view
-        vw_settings = vw.settings()
+        view = self.view
+        view_settings = view.settings()
 
         # 2.  MarkerStack object is attempted to be retrieved from View Settings with
         #     key ``_stack_key``.  If it is ``None``, then the stack is empty and there
         #     is nothing to do.  If it is not ``None``, then this sequence is continued.
-        mstack = vw_settings.get(_stack_key)
+        mstack = view_settings.get(_stack_key)
 
         if mstack is None:
             if _debugging:
@@ -1197,19 +1197,19 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
                 print(f'Popped Marker: {marker}')
 
             if len(mstack) == 0:
-                vw_settings.erase(_stack_key)
+                view_settings.erase(_stack_key)
             else:
-                vw_settings.set(_stack_key, mstack)
+                view_settings.set(_stack_key, mstack)
 
             # 4.  The Region (icon) is fetched from the left gutter (contains current
             #     position where we want to place the caret).  It is retrieved using the
             #     unique key stored inside the popped Marker object.
             icon_key = marker[_icon_key]
-            rgns = vw.get_regions(icon_key)
+            rgns = view.get_regions(icon_key)
 
             # 5.  That set of 1 Region (with that unique key) is removed from the
             #     View's Region dictionary, causing that icon to be removed.
-            vw.erase_regions(icon_key)
+            view.erase_regions(icon_key)
 
             # 6.  Move caret to previously-stored position.  This is done by:
             #     - All current "Selections" (i.e. carets) are removed from the View, and
@@ -1217,7 +1217,7 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
             # For safety....
             if rgns:
                 rgn = rgns[0]
-                sel_list = vw.sel()
+                sel_list = view.sel()
                 sel_list.clear()
                 sel_list.add(rgn)
 
@@ -1227,12 +1227,12 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
                 #     This is done mostly in reverse of how the percent was computed.
                 #     ('vp' = viewport.)
                 pct_down_from_viewport_top = marker[_pct_fr_top_key]
-                _, vp_height = vw.viewport_extent()
+                _, vp_height = view.viewport_extent()
                 dip_pt_from_top_of_vp = vp_height * pct_down_from_viewport_top
                 pt = rgn.b
-                _, dip_pt_down_from_text_top = vw.text_to_layout(pt)
+                _, dip_pt_down_from_text_top = view.text_to_layout(pt)
                 dip_vp_is_scrolled_down = dip_pt_down_from_text_top - dip_pt_from_top_of_vp
-                vw.set_viewport_position((0.0, dip_vp_is_scrolled_down), animate=_animate_scroll)
+                view.set_viewport_position((0.0, dip_vp_is_scrolled_down), animate=_animate_scroll)
 
                 if _debugging:
                     print(f'Popped Region: {rgn}')
@@ -1244,12 +1244,12 @@ class MarkerStackPopCommand(sublime_plugin.TextCommand):
                 #     reduced from 2 to 1, that the icon reverts back to the SINGLE
                 #     Marker icon again.  This isn't necessary if stack is now empty.
                 if mstack:
-                    curr_line_no = vw.rowcol(rgn.b)[0]
+                    curr_line_no = view.rowcol(rgn.b)[0]
 
-                    if _count_of_regions_on_line(vw, mstack, curr_line_no) == 1:
+                    if _count_of_regions_on_line(view, mstack, curr_line_no) == 1:
                         # Marker count on this line just changed from 1 to 2.  Gutter
                         # icon change is needed to show MULTIPLE Marker icon.
-                        _adjust_marker_icon_for_count_on_line(vw, mstack, curr_line_no, 1)
+                        _adjust_marker_icon_for_count_on_line(view, mstack, curr_line_no, 1)
 
 
 class MarkerStackDumpCommand(sublime_plugin.TextCommand):
