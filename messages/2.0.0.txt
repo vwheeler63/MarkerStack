@@ -1,0 +1,8 @@
+Version 2.0.0 (2026-03-24 09:56)
+--------------------------------
+
+- Enhanced scroll state when a pushed position is popped:  now the scroll state
+  restored is the relative vertical position of the caret within the Viewport,
+  replacing the previous behavior which was the raw number of pixels the Viewport
+  was scrolled down from the top of the text when the position was pushed.
+- Minor enhancements to documentation.

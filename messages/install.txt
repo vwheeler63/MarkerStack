@@ -1,5 +1,13 @@
-MarkerStack is the missing tool for efficiently being able to "push and pop bookmarks"
-in Sublime Text 4050 and onward.
+MarkerStack is a package for Sublime Text that enables you to effectively
+PUSH and POP positions in Sublime Text 4050 and onward, where a "position"
+is defined as:
+
+    caret position along with it's relative vertical position within the
+    visible editing area.
+
+Think of it as giving you the ability to "push and pop bookmarks",
+without having to delete the bookmark afterwards.
+
 
 The Problem MarkerStack Solves
 ------------------------------
@@ -7,10 +15,10 @@ The Problem MarkerStack Solves
 There are many kinds of editing interruptions that happen regularly for most
 people using a text editor.  Examples:
 
-- go elsewhere in a file to copy a line of text (e.g. source code) onto the
+- go elsewhere in a file to copy some text (e.g. source code) onto the
   clipboard, so that it can be pasted where you are editing;
-- handle a change required elsewhere in the file before you forget it
-  (e.g. a typo you just found and you know it occurred in several other places);
+- handle a change required elsewhere in the file before you forget it (e.g.
+  a typo you just found and you know it occurred in several other places);
 - you get interrupted and need to move your cursor away from where you are
   editing in order to handle the interruption;
 - your train of thought goes on a "detour" and you want to remember where you
@@ -27,7 +35,7 @@ handling an interruption might span across Sublime Text sessions.
 Using MarkerStack is significantly more efficient than setting a Bookmark for
 interruptions such as the above, and doesn't leave you with the task of
 
-- cleaning up unused bookmarks, or
+- cleaning up no-longer-used bookmarks, or
 - remembering where you were previously in the file.
 
 MarkerStack is especially helpful if the duration of an interruption lasted

@@ -1,10 +1,14 @@
 # MarkerStack
 
-MarkerStack is a package for Sublime Text that enables you to effectively "push and pop bookmarks" in Sublime Text 4050 and onward.
+MarkerStack is a package for Sublime Text that enables you to effectively PUSH and POP positions in Sublime Text 4050 and onward, where a "position" is defined as:
 
-Think of it as giving you the ability to "push and pop bookmarks".
+```
+cursor (caret) position along with it's relative vertical position within the visible editing area.
+```
 
-When a Marker is pushed, a symbol appears in the left gutter showing what line it is on.  The gutter icon changes to a "multiple Marker" icon when there is more than one Marker on the same line.  The marker moves with the text when text is inserted or deleted before it.  MarkerStack state is "remembered" until the View is closed, or until all Markers are popped off the stack, whichever comes first.
+Think of it as giving you the ability to "push and pop bookmarks", without having to delete the bookmark afterwards.
+
+When a Marker is pushed, a symbol appears in the left gutter showing what line it is on.  If there is more than one position pushed on the same line, the gutter icon changes to a "multiple-position Marker".  The marker moves with the text when text is inserted or deleted before it.  MarkerStack state within a View is "remembered" until the View is closed, or until all Markers are popped off the stack, whichever comes first.
 
 
 ## The Problem MarkerStack Solves
@@ -16,11 +20,9 @@ There are many kinds of editing interruptions that happen regularly for most peo
 - you get interrupted and need to move your cursor away from where you are editing in order to handle the interruption;
 - your train of thought goes on a "detour" and you want to remember where you were before without having to find it again.
 
-With MarkerStack, you can PUSH your cursor (caret) position in a Sublime Text View with one keystroke, go do something elsewhere in the same file, and then POP your cursor position with another keystroke, to instantly be back where you left off, without having to remember where it is.
+With MarkerStack, you can PUSH your cursor (caret) position in a Sublime Text View with one key combination, go do something elsewhere in the same file, and then POP your cursor position with another keystroke, to instantly be back where you left off, without having to remember where it is.
 
 MarkerStack data is saved across Sublime Text sessions, for those occasions when handling an interruption might span across Sublime Text sessions.
-
-It is designed for efficiently managing temporary moves away from your current editing position in the text.
 
 For additional details, see the module header comment in ``markerstack.py``.
 
@@ -53,7 +55,7 @@ MarkerStack was originally intended to be pre-mapped to a pair of keystrokes
 - [F5] and
 - [Shift+F5]
 
-but because the good instructions for publishing a Sublime Text Package strongly advise against any pre-defined key mappings, MarkerStack comes with a `Default.sublime-keymap` with a default key mapping that is commented out.  To use MarkerStack via the keyboard (easier than using it through the Command Palette), you'll need to map a pair of keys to its PUSH and POP Commands.
+but because the wise instructions for publishing a Sublime Text Package strongly advise against any pre-defined key mappings, MarkerStack comes with a `Default.sublime-keymap` with a default key mapping that is commented out.  To use MarkerStack via the keyboard (easier than using it through the Command Palette), you'll need to map a pair of keys to its PUSH and POP Commands.
 
 The easiest way to set your key bindings is through the menu:
 
