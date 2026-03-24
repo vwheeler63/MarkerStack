@@ -545,6 +545,20 @@ Given:  ``rgn`` is the region retrieved from the View's Region Dictionary
 # This scrolls the Viewport to correct position, and relative % position
 # within the Viewport is preserved.
 # -------------------------------------------------------------------------
+
+
+Known Issues
+************
+
+If a position that is not in the Viewport is pushed onto the Marker Stack,
+the same situation will be restored when that position is POPPED (the
+position will still be outside of the Viewport).  In 30+ years of using this
+feature (add previously in another programmer's editor), I have never
+pushed such a position, and I encountered it only in testing this Package.
+So a conscious decision (for version 2.0) was made NOT to implement a
+work-around for this.  It can be detected and scrolling can easily be done
+to force the caret to be in view.  But at this writing, I am doubting that
+anyone will encounter it.
 """
 import sublime
 import sublime_plugin
