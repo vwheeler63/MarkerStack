@@ -91,40 +91,49 @@ This is unfortunately long, but it is important, because of a large amount
 of undocumented (but consistent) behavior on Sublime Text's part.  The below
 is the only place this author knows of that documents some of this behavior,
 and it is worth preserving.  (Especially the "Limitations" listed below,
-some of which had to be discovered empirically by tests.)
+some of which had to be discovered empirically by testing.)
 
 - A View's Settings object (a representation of which is returned with
   ``self.view.settings()``) stores its content across sessions.  A whole
-  Python object (e.g. a dictionary containing your values) can be stored,
+  Python object (e.g. a dictionary or list or an object that inherits from
+  Python built-in data types, containing your values) can be stored,
   retrieved and removed from within a TextCommand using a unique key like
   this:
 
   .. code-block:: py
 
-      settings = self.view.settings()
-      settings.set(key, my_obj)        # Store
-      my_obj = settings.get(key)       # Retrieve
-      settings.erase(key)              # Remove
+      view_settings = self.view.settings()
+      view_settings.set(key, my_obj)        # Store
+      my_obj = view_settings.get(key)       # Retrieve
+      view_settings.erase(key)              # Remove
 
   and whatever is stored is saved across Sublime Text sessions as long
   as the View remains open.
 
+  In the above code, ``view_settings`` is an object instantiated from the
+  ``sublime.Settings`` class, and which has dictionary-like behavior, but
+  is not itself a dictionary.  You can retrieve a real Python dictionary
+  containing its contents by calling ``view_settings.to_dict()``, but you
+  should rarely if ever need to because of its ``set()``, ``get()`` and
+  ``erase()`` methods.
+
   It is also important to understand that ``my_obj`` retrieved by
-  ``my_obj = settings.get(key)`` above is NOT the same object that was
+  ``my_obj = view_settings.get(key)`` above is NOT the same object that was
   submitted, but is only a COPY, and thus modifying it does nothing to the
-  actual settings inside the View.  Further, ``settings.set(key, my_obj)``
+  actual settings inside the View.  Further, ``view_settings.set(key, my_obj)``
   ALSO does not store the object submitted, but instead makes a COPY of it
   and stores THAT.  So there is no way to get an actual reference to the
-  objects stored inside a View's Settings object --- only copies.
+  objects stored inside a View's Settings object---only copies.
 
   Limitation:
 
-      Simply storing caret position and viewport position (scroll state)
-      would not be adequate because when text is added or deleted above the
+      Simply storing caret position and scroll state in View settings would
+      not be adequate because when text is added or deleted above the
       marker, the integer stored and retrieved for caret position would
       become invalid, and there would be no way to understand how to adjust
-      it, and it would be horribly complex (impractical) to keep it
-      adjusted with every user keystroke.
+      it, and it would be horribly complex (i.e. impractical) to keep it
+      adjusted with every user keystroke.  But Sublime Text has a built-in
+      way to keep track of a position in text.  See below.
 
 
 - A View also is able to store a set of Regions referenced with a unique

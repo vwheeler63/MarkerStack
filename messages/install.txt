@@ -5,8 +5,8 @@ is defined as:
     caret position along with it's relative vertical position within the
     visible editing area.
 
-Think of it as giving you the ability to "push and pop bookmarks",
-without having to delete the bookmark afterwards.
+Think of it as giving you the ability to "push and pop bookmarks", without
+having to delete the bookmark afterwards.
 
 
 The Problem MarkerStack Solves
