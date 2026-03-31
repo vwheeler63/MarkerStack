@@ -1,0 +1,12 @@
+Version 1.3.0 (2026-03-24 09:56)
+--------------------------------
+
+- Improved the restored scroll state when a position is POPPED off the stack.
+  Now what is restored is the relative vertical position of the caret within the
+  Viewport, replacing the previous behavior which was the raw number of pixels the
+  Viewport was scrolled down from the top of the text when the position was pushed.
+  Now a POP operation is guaranteed to return the caret roughly to the same position
+  it was when its location was PUSHED, even if the size of the Viewport has changed,
+  and a large amount of text has been added or removed above it.
+
+- Minor enhancements to documentation.
