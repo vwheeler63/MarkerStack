@@ -8,7 +8,7 @@
 		}
 	},
 	{
-		"caption": "MarkerStack: Key Bindings",
+		"caption": "Preferences: MarkerStack Key Bindings",
 		"command": "edit_settings",
 		"args": {
 			"base_file": "${packages}/MarkerStack/Default.sublime-keymap",
@@ -16,7 +16,7 @@
 		}
 	},
 	{
-		"caption": "MarkerStack: Settings",
+		"caption": "Preferences: MarkerStack Settings",
 		"command": "edit_settings",
 		"args": {
 			"base_file": "${packages}/MarkerStack/MarkerStack.sublime-settings",
